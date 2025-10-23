@@ -4,15 +4,19 @@ import { REST } from '@discordjs/rest';
 import { Routes } from 'discord-api-types/v10';
 
 // ------------------------
-// Check required environment variables
+// DEBUG: Check environment variables
 // ------------------------
+console.log('DISCORD_TOKEN exists?', !!process.env.DISCORD_TOKEN);
+console.log('CLIENT_ID exists?', !!process.env.CLIENT_ID);
+console.log('GUILD_ID exists?', !!process.env.GUILD_ID);
+
 const { DISCORD_TOKEN, CLIENT_ID, GUILD_ID } = process.env;
 
 if (!DISCORD_TOKEN || !CLIENT_ID || !GUILD_ID) {
   console.error(
     '❌ Missing required environment variables. Make sure DISCORD_TOKEN, CLIENT_ID, and GUILD_ID are set in Railway Variables.'
   );
-  process.exit(1);
+  process.exit(1); // exit early if anything is missing
 }
 
 // ------------------------
@@ -24,14 +28,8 @@ const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 // Define your slash commands here
 // ------------------------
 const commands = [
-  {
-    name: 'ping',
-    description: 'Replies with Pong!',
-  },
-  {
-    name: 'hello',
-    description: 'Greets the user!',
-  },
+  { name: 'ping', description: 'Replies with Pong!' },
+  { name: 'hello', description: 'Greets the user!' },
 ];
 
 // ------------------------
