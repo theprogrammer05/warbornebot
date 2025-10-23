@@ -1,64 +1,74 @@
 import fs from 'fs';
 import path from 'path';
-import { Client, GatewayIntentBits, Collection } from 'discord.js';
-import { REST } from '@discordjs/rest';
-import { Routes } from 'discord.js';
-import 'dotenv/config';
+import { Client, GatewayIntentBits, REST, Routes } from 'discord.js';
+import dotenv from 'dotenv';
+dotenv.config();
 
-// Check required environment variables
+const client = new Client({ intents: [GatewayIntentBits.Guilds] });
+
 const { DISCORD_TOKEN, CLIENT_ID, GUILD_ID } = process.env;
+
 if (!DISCORD_TOKEN || !CLIENT_ID || !GUILD_ID) {
-  console.error('❌ Missing required environment variables. Bot will not register commands.');
+  console.error('❌ Missing required environment variables.');
   process.exit(1);
 }
 
-// Create Discord client
-const client = new Client({ intents: [GatewayIntentBits.Guilds] });
+// Load commands dynamically
+const commandsPath = path.join(process.cwd(), 'commands');
+const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
 
-// Load commands
 const commands = [];
-client.commands = new Collection();
-const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
 
 for (const file of commandFiles) {
-  const filePath = path.join('./commands', file);
-  const command = await import(filePath);
-  if (!command.default?.data || !command.default?.execute) {
-    console.log(`⚠️ Command file ${file} is missing required properties.`);
+  const command = await import(`./commands/${file}`);
+  if (!command.default?.name || !command.default?.description) {
+    console.warn(`⚠️ Command file ${file} is missing required properties.`);
     continue;
   }
-  client.commands.set(command.default.data.name, command.default);
-  commands.push(command.default.data.toJSON());
+  commands.push(command.default);
 }
 
-console.log(`✅ Loaded commands: ${[...client.commands.keys()]}`);
-
-// Register commands with Discord (guild-specific for faster updates)
+// Register commands with Discord
 const rest = new REST({ version: '10' }).setToken(DISCORD_TOKEN);
 
 (async () => {
   try {
-    console.log('🔄 Registering commands...');
+    console.log('Started refreshing application (/) commands.');
+
+    // Map /price to include input option
+    const formattedCommands = commands.map(cmd => {
+      if (cmd.name === 'price') {
+        return {
+          ...cmd,
+          options: [
+            {
+              name: 'numbers',
+              type: 3, // STRING
+              description: 'Starfall Token Cost, Starfall Token Chest, Solarbite Cost (for Chest)',
+              required: true
+            }
+          ]
+        };
+      }
+      return cmd;
+    });
+
     await rest.put(
       Routes.applicationGuildCommands(CLIENT_ID, GUILD_ID),
-      { body: commands }
+      { body: formattedCommands }
     );
+
     console.log('✅ Successfully registered commands.');
   } catch (error) {
     console.error('❌ Error registering commands:', error);
   }
 })();
 
-// Bot ready event
-client.once('ready', () => {
-  console.log(`✅ Bot logged in as ${client.user.tag}`);
-});
-
-// Command handling
+// Handle command interactions
 client.on('interactionCreate', async interaction => {
   if (!interaction.isChatInputCommand()) return;
 
-  const command = client.commands.get(interaction.commandName);
+  const command = commands.find(cmd => cmd.name === interaction.commandName);
   if (!command) return;
 
   try {
@@ -69,5 +79,4 @@ client.on('interactionCreate', async interaction => {
   }
 });
 
-// Login to Discord
-client.login(DISCORD_TOKEN);
+client.login(DISCORD_TOKEN).then(() => console.log('✅ Bot logged in successfully.'));

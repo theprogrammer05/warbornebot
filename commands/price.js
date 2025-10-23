@@ -1,36 +1,39 @@
-import { SlashCommandBuilder } from 'discord.js';
-
 export default {
-  data: new SlashCommandBuilder()
-    .setName('price')
-    .setDescription('Calculates gear cost from Starfall and Solarbite values')
-    .addNumberOption(option =>
-      option
-        .setName('starfall_cost')
-        .setDescription('Cost of Starfall Token (NPC)')
-        .setRequired(true))
-    .addNumberOption(option =>
-      option
-        .setName('chest_size')
-        .setDescription('Number of Starfall Tokens in a chest')
-        .setRequired(true))
-    .addNumberOption(option =>
-      option
-        .setName('solarbite')
-        .setDescription('Solarbite cost for the chest')
-        .setRequired(true)),
-
+  name: 'price',
+  description: 'Calculates Gear Cost. Comma-delimited numbers.',
   async execute(interaction) {
-    const starfallCost = interaction.options.getNumber('starfall_cost');
-    const chestSize = interaction.options.getNumber('chest_size');
-    const solarbite = interaction.options.getNumber('solarbite');
+    try {
+      // Get the input string
+      const input = interaction.options.getString('numbers') || '';
+      const cleanInput = input.replace(/\s/g, ''); // remove all spaces
 
-    if (!starfallCost || !chestSize || !solarbite) {
-      return interaction.reply('❌ Missing required values.');
+      // Split by comma
+      const parts = cleanInput.split(',');
+      if (parts.length !== 3) {
+        await interaction.reply(
+          '❌ Correct format: `Starfall Token Cost, Starfall Token Chest, Solarbite Cost (for Chest)`\n' +
+          'Example: 5000000,340000,30'
+        );
+        return;
+      }
+
+      const [starfallCost, chestSize, solarbite] = parts.map(Number);
+
+      if (parts.some(isNaN)) {
+        await interaction.reply(
+          '❌ All three values must be numbers.\n' +
+          'Correct format: `Starfall Token Cost, Starfall Token Chest, Solarbite Cost (for Chest)`\n' +
+          'Example: 5000000,340000,30'
+        );
+        return;
+      }
+
+      const result = ((starfallCost / chestSize) * solarbite) * 0.94;
+
+      await interaction.reply(`💰 Calculated value: **${result.toLocaleString()}**`);
+    } catch (err) {
+      console.error(err);
+      await interaction.reply('❌ There was an error calculating the price.');
     }
-
-    const result = ((starfallCost / chestSize) * solarbite) * 0.94;
-
-    await interaction.reply(`✅ Result: ${result.toLocaleString()}`);
   }
 };
