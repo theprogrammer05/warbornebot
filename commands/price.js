@@ -1,17 +1,25 @@
+import { SlashCommandBuilder } from 'discord.js';
+
 export default {
-  name: 'price',
-  description: 'Calculates Gear Cost. Comma delimited, do: cost of gear (silver),silver chest size, solarbite for the chest',
-  execute(interaction) {
-    // Get options from slash command
-    const starfallCost = parseFloat(interaction.options.getString('starfall_token_cost'));
-    const chestStarfall = parseFloat(interaction.options.getString('starfall_token_chest'));
-    const solarbiteCost = parseFloat(interaction.options.getString('solarbite_cost'));
+    data: new SlashCommandBuilder()
+        .setName('price')
+        .setDescription('Calculate gear cost from input values')
+        .addStringOption(option =>
+            option.setName('values')
+                  .setDescription('Comma-separated: StarfallTokenCost,StarfallChest,SolrbiteCost')
+                  .setRequired(true)
+        ),
+    async execute(interaction) {
+        const input = interaction.options.getString('values');
+        const parts = input.split(',').map(p => parseFloat(p.trim()));
 
-    if (isNaN(starfallCost) || isNaN(chestStarfall) || isNaN(solarbiteCost)) {
-      return interaction.reply('❌ Invalid numbers provided. Use numeric values.');
+        if (parts.length !== 3 || parts.some(isNaN)) {
+            return interaction.reply('❌ Invalid input. Use format: StarfallCost,ChestSize,SolrbiteCost');
+        }
+
+        const [starfallCost, chestSize, solarbiteCost] = parts;
+        const result = ((starfallCost / chestSize) * solarbiteCost) * 0.94;
+
+        interaction.reply(`💰 Calculated Break Even Cost: ${result.toLocaleString()}`);
     }
-
-    const result = ((starfallCost / chestStarfall) * solarbiteCost) * 0.94;
-    interaction.reply(`Calculated cost: ${result.toLocaleString()}`);
-  }
 };
