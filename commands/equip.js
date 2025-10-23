@@ -1,13 +1,14 @@
+import { SlashCommandBuilder } from 'discord.js';
+
 export default {
-  name: 'equip',
-  description: 'Shows Equip Tier info',
-  execute(interaction) {
-    const equipData = `
-Tier 8: 36,400
+  data: new SlashCommandBuilder()
+    .setName('equip')
+    .setDescription('Shows equipment rewards by tier'),
+  async execute(interaction) {
+    const output = `Tier 8: 36,400
 Tier 9: 47,300
 Tier 10: 61,500
-Tier 11: 79,900
-`;
-    interaction.reply(equipData);
+Tier 11: 79,900`;
+    await interaction.reply(output);
   }
 };

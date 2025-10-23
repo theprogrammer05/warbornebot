@@ -1,29 +1,36 @@
-const { SlashCommandBuilder } = require('@discordjs/builders');
+import { SlashCommandBuilder } from 'discord.js';
 
-module.exports = {
+export default {
   data: new SlashCommandBuilder()
     .setName('price')
-    .setDescription('Calculate gear cost. Use commas, no spaces')
-    .addStringOption(option =>
-      option.setName('input')
-        .setDescription('Starfall Cost, Chest Size, Solarbite Cost (for Chest)')
-        .setRequired(true)
-    ),
+    .setDescription('Calculates gear cost from Starfall and Solarbite values')
+    .addNumberOption(option =>
+      option
+        .setName('starfall_cost')
+        .setDescription('Cost of Starfall Token (NPC)')
+        .setRequired(true))
+    .addNumberOption(option =>
+      option
+        .setName('chest_size')
+        .setDescription('Number of Starfall Tokens in a chest')
+        .setRequired(true))
+    .addNumberOption(option =>
+      option
+        .setName('solarbite')
+        .setDescription('Solarbite cost for the chest')
+        .setRequired(true)),
+
   async execute(interaction) {
-    const msg = interaction.options.getString('input').replace(/\s+/g, '');
-    try {
-      const parts = msg.split(',');
-      if (parts.length !== 3) throw new Error();
+    const starfallCost = interaction.options.getNumber('starfall_cost');
+    const chestSize = interaction.options.getNumber('chest_size');
+    const solarbite = interaction.options.getNumber('solarbite');
 
-      const [starfallCost, chestSize, solarbiteCost] = parts.map(Number);
-      if (parts.some(isNaN)) throw new Error();
-
-      const result = ((starfallCost / chestSize) * solarbiteCost) * 0.94;
-      await interaction.reply(`💰 Result: ${result.toLocaleString()}`);
-    } catch {
-      await interaction.reply(
-        '❌ Correct format: `Starfall Token Cost, Starfall Token Chest, Solarbite Cost (for Chest)`\nExample: `5000000,340000,30`'
-      );
+    if (!starfallCost || !chestSize || !solarbite) {
+      return interaction.reply('❌ Missing required values.');
     }
+
+    const result = ((starfallCost / chestSize) * solarbite) * 0.94;
+
+    await interaction.reply(`✅ Result: ${result.toLocaleString()}`);
   }
 };
