@@ -54,4 +54,26 @@ const rest = new REST({ version: '10' }).setToken(DISCORD_TOKEN);
 // ------------------------
 // Bot event listeners
 // ------------------------
-client.once('ready', () =>
+client.once('ready', () => {
+  console.log(`✅ Logged in as ${client.user.tag}`);
+});
+
+client.on('interactionCreate', async (interaction) => {
+  if (!interaction.isChatInputCommand()) return;
+
+  switch (interaction.commandName) {
+    case 'ping':
+      await interaction.reply('Pong!');
+      break;
+    case 'hello':
+      await interaction.reply(`Hello, ${interaction.user.username}! 👋`);
+      break;
+    default:
+      await interaction.reply('Unknown command!');
+  }
+});
+
+// ------------------------
+// Log in the bot
+// ------------------------
+client.login(DISCORD_TOKEN);
