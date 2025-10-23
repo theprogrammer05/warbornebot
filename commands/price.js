@@ -1,36 +1,54 @@
 import { SlashCommandBuilder } from 'discord.js';
 
 export default {
-    data: new SlashCommandBuilder()
-        .setName('price')
-        .setDescription('Calculates gear cost from Starfall and Solarbite values.')
-        .addNumberOption(option =>
-            option.setName('starfall_cost')
-                  .setDescription('Starfall Token Cost (NPC)')
-                  .setRequired(true))
-        .addNumberOption(option =>
-            option.setName('starfall_chest')
-                  .setDescription('Starfall Token Chest')
-                  .setRequired(true))
-        .addNumberOption(option =>
-            option.setName('solarbite')
-                  .setDescription('Solarbite Cost for Chest')
-                  .setRequired(true)),
+  data: new SlashCommandBuilder()
+    .setName('price')
+    .setDescription('Calculates gear cost from token values')
+    .addStringOption(option =>
+      option
+        .setName('values')
+        .setDescription(
+          'Enter: Starfall Token Cost, Starfall Token Chest, Solarbite Cost (for Chest)'
+        )
+        .setRequired(true)
+    ),
+  async execute(interaction) {
+    const input = interaction.options.getString('values');
 
-    async execute(interaction) {
-        const starfallCost = interaction.options.getNumber('starfall_cost');
-        const starfallChest = interaction.options.getNumber('starfall_chest');
-        const solarbite = interaction.options.getNumber('solarbite');
+    // Remove spaces
+    const sanitized = input.replace(/\s+/g, '');
+    const parts = sanitized.split(',');
 
-        if (!starfallCost || !starfallChest || !solarbite) {
-            return interaction.reply(
-                '❌ Please provide all numbers!\n' +
-                'Correct format: use the three input fields in Discord when typing `/price`.'
-            );
-        }
-
-        const result = ((starfallCost / starfallChest) * solarbite * 0.94).toLocaleString();
-
-        await interaction.reply(`💰 Result: ${result}`);
+    if (parts.length !== 3) {
+      await interaction.reply({
+        content:
+          '❌ Correct format: `Starfall Token Cost, Starfall Token Chest, Solarbite Cost (for Chest)`\n' +
+          'Example: 5000000,340000,30',
+        ephemeral: true
+      });
+      return;
     }
+
+    const [starfallCost, starfallChest, solarbite] = parts.map(Number);
+
+    if (parts.some(isNaN)) {
+      await interaction.reply({
+        content:
+          '❌ All values must be numbers.\n' +
+          'Format: `Starfall Token Cost, Starfall Token Chest, Solarbite Cost (for Chest)`\n' +
+          'Example: 5000000,340000,30',
+        ephemeral: true
+      });
+      return;
+    }
+
+    // Calculate total
+    const result = ((starfallCost / starfallChest) * solarbite) * 0.94;
+
+    await interaction.reply(
+      `💰 Result: ${result.toLocaleString(undefined, {
+        maximumFractionDigits: 2
+      })}`
+    );
+  }
 };
