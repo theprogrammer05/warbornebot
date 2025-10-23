@@ -1,31 +1,30 @@
+import { SlashCommandBuilder } from '@discordjs/builders';
+
 export default {
-  name: 'price',
-  description: 'Calculate Gear Cost: Starfall Cost, Chest Size, Solarbite Cost',
+  data: new SlashCommandBuilder()
+    .setName('price')
+    .setDescription('Calculate Gear Cost')
+    .addStringOption(option =>
+      option
+        .setName('input')
+        .setDescription('Starfall Cost, Chest Size, Solarbite Cost (for Chest)')
+        .setRequired(true)
+    ),
   async execute(interaction) {
-    const msg = interaction.options?.getString?.('input') || interaction.content || '';
-
-    if (!msg) {
-      return interaction.reply(
-        '❌ Correct format: `Starfall Token Cost, Starfall Token Chest, Solarbite Cost (for Chest)`\n' +
-        'Example: `5000000,340000,30`'
-      );
-    }
-
+    const msg = interaction.options.getString('input').replace(/\s+/g, '');
     try {
-      const parts = msg.replace(/\s+/g, '').split(',');
+      const parts = msg.split(',');
       if (parts.length !== 3) throw new Error();
 
       const [starfallCost, chestSize, solarbiteCost] = parts.map(Number);
       if (parts.some(isNaN)) throw new Error();
 
       const result = ((starfallCost / chestSize) * solarbiteCost) * 0.94;
-      return interaction.reply(`💰 Result: ${result.toLocaleString()}`);
+      await interaction.reply(`💰 Result: ${result.toLocaleString()}`);
     } catch {
-      return interaction.reply(
-        '❌ Invalid input!\n' +
-        'Correct format: `Starfall Token Cost, Starfall Token Chest, Solarbite Cost (for Chest)`\n' +
-        'Example: `5000000,340000,30`'
+      await interaction.reply(
+        '❌ Invalid input!\nCorrect format: `Starfall Token Cost, Starfall Token Chest, Solarbite Cost (for Chest)`\nExample: `5000000,340000,30`'
       );
     }
-  }
+  },
 };
