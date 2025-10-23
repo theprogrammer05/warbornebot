@@ -1,7 +1,9 @@
-import 'dotenv/config';
 import fs from 'fs';
 import path from 'path';
-import { Client, GatewayIntentBits, REST, Routes } from 'discord.js';
+import { Client, GatewayIntentBits, Collection } from 'discord.js';
+import { REST } from '@discordjs/rest';
+import { Routes } from 'discord.js';
+import 'dotenv/config';
 
 // Check required environment variables
 const { DISCORD_TOKEN, CLIENT_ID, GUILD_ID } = process.env;
@@ -10,56 +12,62 @@ if (!DISCORD_TOKEN || !CLIENT_ID || !GUILD_ID) {
   process.exit(1);
 }
 
-// Initialize Discord client
+// Create Discord client
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 
-// Load commands dynamically from commands folder
-const commandsPath = path.resolve('./commands');
-const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
-
+// Load commands
 const commands = [];
-const commandMap = new Map();
+client.commands = new Collection();
+const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'));
 
 for (const file of commandFiles) {
-  const commandModule = await import(path.join(commandsPath, file));
-  const command = commandModule.default;
-  if (!command || !command.name || !command.execute) {
-    console.warn(`⚠️ Command file ${file} is missing required properties.`);
+  const filePath = path.join('./commands', file);
+  const command = await import(filePath);
+  if (!command.default?.data || !command.default?.execute) {
+    console.log(`⚠️ Command file ${file} is missing required properties.`);
     continue;
   }
-  commands.push({ name: command.name, description: command.description || 'No description' });
-  commandMap.set(command.name, command);
+  client.commands.set(command.default.data.name, command.default);
+  commands.push(command.default.data.toJSON());
 }
 
-// Register commands to Discord (for this guild)
+console.log(`✅ Loaded commands: ${[...client.commands.keys()]}`);
+
+// Register commands with Discord (guild-specific for faster updates)
 const rest = new REST({ version: '10' }).setToken(DISCORD_TOKEN);
-try {
-  await rest.put(Routes.applicationGuildCommands(CLIENT_ID, GUILD_ID), { body: commands });
-  console.log(`✅ Successfully registered ${commands.length} commands.`);
-} catch (err) {
-  console.error('❌ Error registering commands:', err);
-}
 
-// Respond to interactions
+(async () => {
+  try {
+    console.log('🔄 Registering commands...');
+    await rest.put(
+      Routes.applicationGuildCommands(CLIENT_ID, GUILD_ID),
+      { body: commands }
+    );
+    console.log('✅ Successfully registered commands.');
+  } catch (error) {
+    console.error('❌ Error registering commands:', error);
+  }
+})();
+
+// Bot ready event
+client.once('ready', () => {
+  console.log(`✅ Bot logged in as ${client.user.tag}`);
+});
+
+// Command handling
 client.on('interactionCreate', async interaction => {
   if (!interaction.isChatInputCommand()) return;
 
-  const command = commandMap.get(interaction.commandName);
-  if (!command) {
-    return interaction.reply({ content: '❌ Command not found', ephemeral: true });
-  }
+  const command = client.commands.get(interaction.commandName);
+  if (!command) return;
 
   try {
     await command.execute(interaction);
-  } catch (err) {
-    console.error('❌ Error executing command:', err);
+  } catch (error) {
+    console.error(error);
     await interaction.reply({ content: '❌ There was an error executing this command.', ephemeral: true });
   }
 });
 
-// Login bot
-client.login(DISCORD_TOKEN).then(() => {
-  console.log('✅ Bot logged in successfully.');
-}).catch(err => {
-  console.error('❌ Failed to login:', err);
-});
+// Login to Discord
+client.login(DISCORD_TOKEN);
