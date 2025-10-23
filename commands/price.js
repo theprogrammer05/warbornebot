@@ -1,18 +1,18 @@
 export default {
   name: 'price',
-  description: 'Calculates Gear Cost. Comma-delimited numbers.',
+  description: 'Calculates Gear Cost. delimited by "/".',
   async execute(interaction) {
     try {
       // Get the input string
-      const input = interaction.options.getString('numbers') || '';
+      const input = interaction.options.getString('numbers delimiter is: /') || '';
       const cleanInput = input.replace(/\s/g, ''); // remove all spaces
 
       // Split by comma
-      const parts = cleanInput.split(',');
+      const parts = cleanInput.split('/');
       if (parts.length !== 3) {
         await interaction.reply(
           '❌ Correct format: `Starfall Token Cost, Starfall Token Chest, Solarbite Cost (for Chest)`\n' +
-          'Example: 5000000,340000,30'
+          'Example: 5000000/340000/30'
         );
         return;
       }
@@ -23,7 +23,7 @@ export default {
         await interaction.reply(
           '❌ All three values must be numbers.\n' +
           'Correct format: `Starfall Token Cost, Starfall Token Chest, Solarbite Cost (for Chest)`\n' +
-          'Example: 5000000,340000,30'
+          'Example: 5000000/340000/30'
         );
         return;
       }
