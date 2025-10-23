@@ -1,28 +1,40 @@
 export default {
   name: 'price',
-  description: 'Calculates gear solarbite breakeven value.',
-
+  description: 'Calculates Solarbite Break Even Value from your inputs.',
   async execute(interaction) {
     const input = interaction.options.getString('numbers');
+
     if (!input) {
       return interaction.reply({
-        content: '❌ Correct format:\nStarfall Token Cost\nStarfall Token in Chest\nSolarbite Cost (for Chest)\n\nExample: `5000000/340000/30`',
+        content: '❌ Correct format: `Starfall Token Cost, Starfall Token Chest, Solarbite Cost (for Chest)`\nExample: 5000000,340000,30',
         ephemeral: true
       });
     }
 
-    // Remove all spaces and split by comma
-    const parts = input.replace(/\s+/g, '').split('/');
-    if (parts.length !== 3 || parts.some(isNaN)) {
+    // Remove spaces and split
+    const parts = input.replace(/\s/g, '').split(',');
+
+    if (parts.length !== 3) {
       return interaction.reply({
-        content: '❌ Correct format:\nStarfall Token Cost\nStarfall Token in Chest\nSolarbite Cost (for Chest)\n\nExample: `5000000/340000/30`',
+        content: '❌ Correct format: `Starfall Token Cost, Starfall Token Chest, Solarbite Cost (for Chest)`\nExample: 5000000,340000,30',
         ephemeral: true
       });
     }
 
-    const [tokenCost, chestSize, solarbiteCost] = parts;
-    const result = (chestSize / solarbiteCost) * tokenCost;
+    const [starfallCostStr, chestSizeStr, solarbiteCostStr] = parts;
+    const starfallCost = parseFloat(starfallCostStr);
+    const chestSize = parseFloat(chestSizeStr);
+    const solarbiteCost = parseFloat(solarbiteCostStr);
 
-    await interaction.reply(`🌟 **Solarbite Break Even Value:** ${result.toLocaleString('en-US')}`);
+    if (isNaN(starfallCost) || isNaN(chestSize) || isNaN(solarbiteCost) || chestSize === 0) {
+      return interaction.reply({
+        content: '❌ All values must be numbers and chest size cannot be zero.',
+        ephemeral: true
+      });
+    }
+
+    const breakEven = solarbiteCost * (starfallCost / chestSize) * 0.94;
+
+    return interaction.reply(`🌟 Solarbite Break Even Value: ${breakEven.toFixed(2)}`);
   }
 };
