@@ -1,6 +1,6 @@
 export default {
   name: 'price',
-  description: 'Calculates Starfall/Silten cost',
+  description: 'Calculates Gear Cost. Comma delimited, do: cost of gear (silver),silver chest size, solarbite for the chest',
   execute(interaction) {
     // Get options from slash command
     const starfallCost = parseFloat(interaction.options.getString('starfall_token_cost'));
