@@ -1,36 +1,39 @@
 import { SlashCommandBuilder } from 'discord.js';
 
 export default {
-    data: new SlashCommandBuilder()
-        .setName('price')
-        .setDescription('Calculate gear cost from Starfall, Chest, and Solarbite'),
-    async execute(interaction) {
-        const input = interaction.options.getString('input') || interaction.content;
+  data: new SlashCommandBuilder()
+    .setName('price')
+    .setDescription('Calculate Gear Cost. Format: Starfall Cost, Chest Size, Solarbite Cost'),
 
-        try {
-            // Remove all spaces
-            const cleaned = input.replace(/\s+/g, '');
-            const parts = cleaned.split(',');
+  async execute(interaction) {
+    const input = interaction.options.getString('input');
 
-            if (parts.length !== 3) {
-                throw new Error('Invalid input');
-            }
-
-            const [starfallCost, starfallChest, solarbiteCost] = parts.map(Number);
-
-            if (isNaN(starfallCost) || isNaN(starfallChest) || isNaN(solarbiteCost)) {
-                throw new Error('Invalid numbers');
-            }
-
-            const result = ((starfallCost / starfallChest) * solarbiteCost) * 0.94;
-
-            await interaction.reply(`Calculated Gear Cost: **${Math.round(result)}**`);
-        } catch (err) {
-            await interaction.reply(
-                '❌ Invalid format.\n' +
-                'Correct format: `Starfall Token Cost, Starfall Token Chest, Solarbite Cost (for Chest)`\n' +
-                'Example: `5000000,340000,30`'
-            );
-        }
+    if (!input) {
+      return interaction.reply(
+        '❌ You need to provide input!\n' +
+        'Correct format: `Starfall Token Cost, Starfall Token Chest, Solarbite Cost (for Chest)`\n' +
+        'Example: `5000000,340000,30`'
+      );
     }
+
+    try {
+      // Remove spaces and split by comma
+      const parts = input.replace(/\s+/g, '').split(',');
+      if (parts.length !== 3) throw new Error('Invalid number of inputs');
+
+      const [starfallCost, chestSize, solarbiteCost] = parts.map(Number);
+
+      if (parts.some(isNaN)) throw new Error('All values must be numbers');
+
+      const result = ((starfallCost / chestSize) * solarbiteCost) * 0.94;
+
+      await interaction.reply(`💰 Result: ${result.toLocaleString()}`);
+    } catch (err) {
+      await interaction.reply(
+        '❌ Invalid input!\n' +
+        'Correct format: `Starfall Token Cost, Starfall Token Chest, Solarbite Cost (for Chest)`\n' +
+        'Example: `5000000,340000,30`'
+      );
+    }
+  }
 };
