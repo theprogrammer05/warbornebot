@@ -1,42 +1,45 @@
-// index.js
 import { Client, GatewayIntentBits } from 'discord.js';
 import { REST } from '@discordjs/rest';
 import { Routes } from 'discord-api-types/v10';
+import fs from 'fs';
+import path from 'path';
 
 // ------------------------
-// DEBUG: Check environment variables
+// Environment variable check
 // ------------------------
-console.log('DISCORD_TOKEN exists?', !!process.env.DISCORD_TOKEN);
-console.log('CLIENT_ID exists?', !!process.env.CLIENT_ID);
-console.log('GUILD_ID exists?', !!process.env.GUILD_ID);
-
 const { DISCORD_TOKEN, CLIENT_ID, GUILD_ID } = process.env;
-
 if (!DISCORD_TOKEN || !CLIENT_ID || !GUILD_ID) {
-  console.error(
-    '❌ Missing required environment variables. Make sure DISCORD_TOKEN, CLIENT_ID, and GUILD_ID are set in Railway Variables.'
-  );
-  process.exit(1); // exit early if anything is missing
+  console.error('❌ Missing required environment variables.');
+  process.exit(1);
 }
 
 // ------------------------
-// Create Discord client
+// Client
 // ------------------------
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 
 // ------------------------
-// Define your slash commands here
+// Load commands dynamically
 // ------------------------
-const commands = [
-  { name: 'ping', description: 'Replies with Pong!' },
-  { name: 'hello', description: 'Greets the user!' },
-];
+const commandsPath = path.resolve('./commands');
+const commandFiles = fs.readdirSync(commandsPath).filter((file) => file.endsWith('.js'));
+
+const commands = [];
+const commandMap = new Map();
+
+for (const file of commandFiles) {
+  const filePath = path.join(commandsPath, file);
+  const command = await import(`file://${filePath}`);
+  commands.push({ name: command.default.name, description: command.default.description });
+  commandMap.set(command.default.name, command.default.execute);
+}
+
+console.log('Loaded commands:', commands.map(c => c.name));
 
 // ------------------------
-// Register slash commands
+// Register commands with Discord
 // ------------------------
 const rest = new REST({ version: '10' }).setToken(DISCORD_TOKEN);
-
 (async () => {
   try {
     console.log('Refreshing application (/) commands...');
@@ -50,28 +53,38 @@ const rest = new REST({ version: '10' }).setToken(DISCORD_TOKEN);
 })();
 
 // ------------------------
-// Bot event listeners
+// Interaction handler
+// ------------------------
+client.on('interactionCreate', async (interaction) => {
+  if (!interaction.isChatInputCommand()) return;
+
+  const commandExecute = commandMap.get(interaction.commandName);
+  if (!commandExecute) {
+    await interaction.reply('Unknown command!');
+    return;
+  }
+
+  try {
+    await commandExecute(interaction);
+  } catch (error) {
+    console.error(`Error executing ${interaction.commandName}:`, error);
+    if (!interaction.replied && !interaction.deferred) {
+      try {
+        await interaction.reply('❌ Failed to respond to the command.');
+      } catch (e) {
+        console.error('Failed to send fallback reply:', e);
+      }
+    }
+  }
+});
+
+// ------------------------
+// Login
 // ------------------------
 client.once('ready', () => {
   console.log(`✅ Logged in as ${client.user.tag}`);
 });
 
-client.on('interactionCreate', async (interaction) => {
-  if (!interaction.isChatInputCommand()) return;
-
-  switch (interaction.commandName) {
-    case 'ping':
-      await interaction.reply('Pong!');
-      break;
-    case 'hello':
-      await interaction.reply(`Hello, ${interaction.user.username}! 👋`);
-      break;
-    default:
-      await interaction.reply('Unknown command!');
-  }
+client.login(DISCORD_TOKEN).catch((err) => {
+  console.error('Failed to login, check DISCORD_TOKEN:', err);
 });
-
-// ------------------------
-// Log in the bot
-// ------------------------
-client.login(DISCORD_TOKEN);
