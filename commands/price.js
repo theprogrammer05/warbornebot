@@ -1,57 +1,60 @@
 export default {
   name: 'price',
-  description: 'Calculate Solarbite Break Even Value',
+  description: 'Calculates Solarbite break even value from input',
   async execute(interaction) {
-    const input = interaction.options.getString('numbers');
+    const userInput = interaction.options.getString('numbers');
 
-    if (!input) {
+    if (!userInput) {
       return interaction.reply({
         content:
-          '❌ Correct format: `Starfall Token Cost / Starfall Token Chest / Solarbite Cost (for Chest)` or using spaces\n' +
-          'Example: 5000000/340000/30 or 5000000 340000 30',
+          '❌ You must provide numbers.\n' +
+          'Correct format: `Starfall Token Cost / Starfall Token Chest / Solarbite Cost (for Chest)`\n' +
+          'Or use space as delimiter: `StarfallTokenCost StarfallTokenChest SolarbiteCost`\n' +
+          'You can also use k/M shorthand: e.g., 5m / 340k / 30\n' +
+          'Example: `5000000/340000/30` or `5m 340k 30`',
         ephemeral: true,
       });
     }
 
-    // Split by "/" or spaces and trim
-    const parts = input.split(/[\/ ]+/).map(part => part.trim());
+    try {
+      // Replace spaces with "/" to unify delimiter
+      const cleanedInput = userInput.replace(/\s+/g, '/').replace(/,/g, '');
+      const parts = cleanedInput.split('/').map(part => {
+        part = part.trim().toLowerCase();
+        if (part.endsWith('k')) return parseFloat(part) * 1_000;
+        if (part.endsWith('m')) return parseFloat(part) * 1_000_000;
+        return parseFloat(part);
+      });
 
-    if (parts.length !== 3) {
-      return interaction.reply({
-        content:
-          '❌ Incorrect number of inputs. Format: `Starfall Token Cost / Starfall Token Chest / Solarbite Cost (for Chest)` or using spaces',
+      if (parts.length !== 3 || parts.some(isNaN)) {
+        return interaction.reply({
+          content:
+          '❌ Invalid numbers provided.\n' +
+          'Correct format: `Starfall Token Cost / Starfall Token Chest / Solarbite Cost (for Chest)`\n' +
+          'Or use space as delimiter: `StarfallTokenCost StarfallTokenChest SolarbiteCost`\n' +
+          'You can also use k/M shorthand: e.g., 5m / 340k / 30\n' +
+          'Example: `5000000/340000/30` or `5m 340k 30`',
+          ephemeral: true,
+        });
+      }
+
+      const [starfallCost, starfallChest, solarbiteCost] = parts;
+
+      const result = solarbiteCost * (starfallCost / starfallChest) * 0.94;
+
+      const formattedResult = result.toLocaleString(undefined, {
+        maximumFractionDigits: 3,
+      });
+
+      await interaction.reply({
+        content: `🌟 Solarbite Break Even Value for your input: \`${userInput}\` is **${formattedResult}**`,
+      });
+    } catch (err) {
+      console.error(err);
+      await interaction.reply({
+        content: '❌ Something went wrong while calculating. Check your input format.',
         ephemeral: true,
       });
     }
-
-    function parseNumber(numStr) {
-      let num = numStr.replace(/,/g, '').trim(); // remove commas
-      const lastChar = num.slice(-1).toLowerCase();
-
-      if (lastChar === 'k') return parseFloat(num.slice(0, -1)) * 1_000;
-      if (lastChar === 'm') return parseFloat(num.slice(0, -1)) * 1_000_000;
-
-      return parseFloat(num);
-    }
-
-    const starfallCost = parseNumber(parts[0]);
-    const chestSize = parseNumber(parts[1]);
-    const solarbiteCost = parseNumber(parts[2]);
-
-    if ([starfallCost, chestSize, solarbiteCost].some(isNaN)) {
-      return interaction.reply({
-        content:
-          '❌ One or more inputs are invalid numbers.\n' +
-          'Format: `Starfall Token Cost / Starfall Token Chest / Solarbite Cost (for Chest)` or using spaces',
-        ephemeral: true,
-      });
-    }
-
-    const result = (solarbiteCost * (starfallCost / chestSize)) * 0.94;
-
-    return interaction.reply({
-      content: `🌟 Solarbite Break Even Value: ${result.toLocaleString(undefined, { maximumFractionDigits: 2 })}`,
-      ephemeral: false,
-    });
   },
 };
