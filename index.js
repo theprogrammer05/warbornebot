@@ -1,103 +1,65 @@
-import { Client, GatewayIntentBits } from 'discord.js';
-import { REST } from '@discordjs/rest';
-import { Routes } from 'discord-api-types/v10';
+import 'dotenv/config';
 import fs from 'fs';
 import path from 'path';
+import { Client, GatewayIntentBits, REST, Routes } from 'discord.js';
 
-// ------------------------
-// Check environment variables
-// ------------------------
+// Check required environment variables
 const { DISCORD_TOKEN, CLIENT_ID, GUILD_ID } = process.env;
-
-console.log('DISCORD_TOKEN:', DISCORD_TOKEN ? 'SET' : 'NOT SET');
-console.log('CLIENT_ID:', CLIENT_ID ? 'SET' : 'NOT SET');
-console.log('GUILD_ID:', GUILD_ID ? 'SET' : 'NOT SET');
-
 if (!DISCORD_TOKEN || !CLIENT_ID || !GUILD_ID) {
   console.error('❌ Missing required environment variables. Bot will not register commands.');
-  // Don't exit, just prevent registration for now
+  process.exit(1);
 }
 
-// ------------------------
-// Client
-// ------------------------
+// Initialize Discord client
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 
-// ------------------------
-// Load commands dynamically
-// ------------------------
+// Load commands dynamically from commands folder
 const commandsPath = path.resolve('./commands');
-const commandFiles = fs.existsSync(commandsPath)
-  ? fs.readdirSync(commandsPath).filter((file) => file.endsWith('.js'))
-  : [];
+const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
 
 const commands = [];
 const commandMap = new Map();
 
 for (const file of commandFiles) {
-  const filePath = path.join(commandsPath, file);
-  const command = await import(`file://${filePath}`);
-  commands.push({ name: command.default.name, description: command.default.description });
-  commandMap.set(command.default.name, command.default.execute);
+  const commandModule = await import(path.join(commandsPath, file));
+  const command = commandModule.default;
+  if (!command || !command.name || !command.execute) {
+    console.warn(`⚠️ Command file ${file} is missing required properties.`);
+    continue;
+  }
+  commands.push({ name: command.name, description: command.description || 'No description' });
+  commandMap.set(command.name, command);
 }
 
-console.log('Loaded commands:', commands.map(c => c.name));
-
-// ------------------------
-// Register commands with Discord (only if env variables exist)
-// ------------------------
-if (DISCORD_TOKEN && CLIENT_ID && GUILD_ID) {
-  const rest = new REST({ version: '10' }).setToken(DISCORD_TOKEN);
-  (async () => {
-    try {
-      console.log('Refreshing application (/) commands...');
-      await rest.put(Routes.applicationGuildCommands(CLIENT_ID, GUILD_ID), {
-        body: commands,
-      });
-      console.log('✅ Commands registered!');
-    } catch (error) {
-      console.error('Failed to register commands:', error);
-    }
-  })();
+// Register commands to Discord (for this guild)
+const rest = new REST({ version: '10' }).setToken(DISCORD_TOKEN);
+try {
+  await rest.put(Routes.applicationGuildCommands(CLIENT_ID, GUILD_ID), { body: commands });
+  console.log(`✅ Successfully registered ${commands.length} commands.`);
+} catch (err) {
+  console.error('❌ Error registering commands:', err);
 }
 
-// ------------------------
-// Interaction handler
-// ------------------------
-client.on('interactionCreate', async (interaction) => {
+// Respond to interactions
+client.on('interactionCreate', async interaction => {
   if (!interaction.isChatInputCommand()) return;
 
-  const commandExecute = commandMap.get(interaction.commandName);
-  if (!commandExecute) {
-    await interaction.reply('Unknown command!');
-    return;
+  const command = commandMap.get(interaction.commandName);
+  if (!command) {
+    return interaction.reply({ content: '❌ Command not found', ephemeral: true });
   }
 
   try {
-    await commandExecute(interaction);
-  } catch (error) {
-    console.error(`Error executing ${interaction.commandName}:`, error);
-    if (!interaction.replied && !interaction.deferred) {
-      try {
-        await interaction.reply('❌ Failed to respond to the command.');
-      } catch (e) {
-        console.error('Failed to send fallback reply:', e);
-      }
-    }
+    await command.execute(interaction);
+  } catch (err) {
+    console.error('❌ Error executing command:', err);
+    await interaction.reply({ content: '❌ There was an error executing this command.', ephemeral: true });
   }
 });
 
-// ------------------------
-// Login
-// ------------------------
-if (DISCORD_TOKEN) {
-  client.once('ready', () => {
-    console.log(`✅ Logged in as ${client.user.tag}`);
-  });
-
-  client.login(DISCORD_TOKEN).catch((err) => {
-    console.error('Failed to login, check DISCORD_TOKEN:', err);
-  });
-} else {
-  console.warn('⚠️ DISCORD_TOKEN not set. Bot will not login.');
-}
+// Login bot
+client.login(DISCORD_TOKEN).then(() => {
+  console.log('✅ Bot logged in successfully.');
+}).catch(err => {
+  console.error('❌ Failed to login:', err);
+});

@@ -1,15 +1,13 @@
-export const equipCommand = {
+export default {
   name: 'equip',
-  description: 'Displays Equip Tiers 8-11',
-  execute: async (message) => {
-    const reply = `
-\`\`\`
+  description: 'Shows Equip Tier info',
+  execute(interaction) {
+    const equipData = `
 Tier 8: 36,400
 Tier 9: 47,300
 Tier 10: 61,500
 Tier 11: 79,900
-\`\`\`
-    `;
-    await message.channel.send(reply);
+`;
+    interaction.reply(equipData);
   }
 };
