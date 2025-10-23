@@ -15,7 +15,7 @@ export default {
     const parts = input.replace(/\s+/g, '').split('/');
     if (parts.length !== 3 || parts.some(isNaN)) {
       return interaction.reply({
-        content: '❌ Correct format: `Starfall Token Cost, Starfall Token Chest, Solarbite Cost (for Chest)`\nExample: `5000000/340000/30`',
+        content: '❌ Correct format: Starfall Token Cost\nStarfall Token Chest\nSolarbite Cost (for Chest)\n\nExample: `5000000/340000/30`',
         ephemeral: true
       });
     }
