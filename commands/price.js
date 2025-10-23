@@ -30,7 +30,7 @@ export default {
 
       const result = ((starfallCost / chestSize) * solarbite) * 0.94;
 
-      await interaction.reply(`💰 Calculated value: **${result.toLocaleString()}**`);
+      await interaction.reply(`💰 Calculated value: **${result.toLocaleString()}** solarbite to break even`);
     } catch (err) {
       console.error(err);
       await interaction.reply('❌ There was an error calculating the price.');
