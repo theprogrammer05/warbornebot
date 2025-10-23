@@ -3,52 +3,35 @@ import { SlashCommandBuilder } from 'discord.js';
 export default {
   data: new SlashCommandBuilder()
     .setName('price')
-    .setDescription('Calculates gear cost from token values')
+    .setDescription('Calculates Starfall Token Chest cost efficiency.')
     .addStringOption(option =>
       option
-        .setName('values')
-        .setDescription(
-          'Enter: Starfall Token Cost, Starfall Token Chest, Solarbite Cost (for Chest)'
-        )
+        .setName('input')
+        .setDescription('Enter: Starfall Token Cost, Starfall Token Chest, Solarbite Cost (for Chest)')
         .setRequired(true)
     ),
   async execute(interaction) {
-    const input = interaction.options.getString('values');
+    const input = interaction.options.getString('input');
+    const cleaned = input.replace(/\s+/g, '');
+    const parts = cleaned.split(',');
 
-    // Remove spaces
-    const sanitized = input.replace(/\s+/g, '');
-    const parts = sanitized.split(',');
-
-    if (parts.length !== 3) {
-      await interaction.reply({
+    if (parts.length !== 3 || parts.some(isNaN)) {
+      return interaction.reply({
         content:
-          '❌ Correct format: `Starfall Token Cost, Starfall Token Chest, Solarbite Cost (for Chest)`\n' +
-          'Example: 5000000,340000,30',
-        ephemeral: true
+          '❌ Correct format: `Starfall Token Cost, Starfall Token Chest, Solarbite Cost (for Chest)`\nExample: `5000000,340000,30`',
+        ephemeral: true,
       });
-      return;
     }
 
-    const [starfallCost, starfallChest, solarbite] = parts.map(Number);
+    const [tokenCost, chestCost, solarCost] = parts.map(Number);
 
-    if (parts.some(isNaN)) {
-      await interaction.reply({
-        content:
-          '❌ All values must be numbers.\n' +
-          'Format: `Starfall Token Cost, Starfall Token Chest, Solarbite Cost (for Chest)`\n' +
-          'Example: 5000000,340000,30',
-        ephemeral: true
-      });
-      return;
-    }
+    // Compute your key number here (modify if you prefer a different formula)
+    const ratio = (chestCost / tokenCost) * 100;
+    const solPerChest = chestCost / solarCost;
 
-    // Calculate total
-    const result = ((starfallCost / starfallChest) * solarbite) * 0.94;
+    // Reply ONLY with the number you care about — for example:
+    const result = solPerChest.toFixed(2);
 
-    await interaction.reply(
-      `💰 Result: ${result.toLocaleString(undefined, {
-        maximumFractionDigits: 2
-      })}`
-    );
-  }
+    await interaction.reply(`💰 Solarbite Break Even: ${result}`);
+  },
 };
