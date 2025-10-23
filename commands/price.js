@@ -35,6 +35,9 @@ export default {
 
     const breakEven = solarbiteCost * (starfallCost / chestSize) * 0.94;
 
-    return interaction.reply(`🌟 Solarbite Break Even Value: ${breakEven.toFixed(2)}`);
+    // Format with commas and 2 decimal places
+    const formatted = breakEven.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+    return interaction.reply(`🌟 Solarbite Break Even Value: ${formatted}`);
   }
 };
