@@ -6,16 +6,16 @@ export default {
     const input = interaction.options.getString('numbers');
     if (!input) {
       return interaction.reply({
-        content: '❌ Correct format: `Starfall Token Cost, Starfall Token Chest, Solarbite Cost (for Chest)`\nExample: `5000000,340000,30`',
+        content: '❌ Correct format: `Starfall Token Cost, Starfall Token Chest, Solarbite Cost (for Chest)`\nExample: `5000000/340000/30`',
         ephemeral: true
       });
     }
 
     // Remove all spaces and split by comma
-    const parts = input.replace(/\s+/g, '').split(',');
+    const parts = input.replace(/\s+/g, '').split('/');
     if (parts.length !== 3 || parts.some(isNaN)) {
       return interaction.reply({
-        content: '❌ Correct format: `Starfall Token Cost, Starfall Token Chest, Solarbite Cost (for Chest)`\nExample: `5000000,340000,30`',
+        content: '❌ Correct format: `Starfall Token Cost, Starfall Token Chest, Solarbite Cost (for Chest)`\nExample: `5000000/340000/30`',
         ephemeral: true
       });
     }
