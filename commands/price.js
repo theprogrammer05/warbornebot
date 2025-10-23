@@ -1,6 +1,6 @@
-import { SlashCommandBuilder } from '@discordjs/builders';
+const { SlashCommandBuilder } = require('@discordjs/builders');
 
-export default {
+module.exports = {
   data: new SlashCommandBuilder()
     .setName('price')
     .setDescription('Calculate gear cost. Use commas, no spaces')
