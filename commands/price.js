@@ -12,7 +12,11 @@ export default {
     ),
   async execute(interaction) {
     try {
-      const input = interaction.options.getString('numbers');
+      let input = interaction.options.getString('numbers');
+
+      // Remove all spaces
+      input = input.replace(/\s+/g, '');
+
       const [starfallCost, chestSize, solarbite] = input.split(',').map(Number);
 
       // Check if all numbers are valid
