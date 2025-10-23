@@ -1,33 +1,34 @@
+import { SlashCommandBuilder } from 'discord.js';
+
 export default {
-  name: 'price',
-  description: 'Calculate gear cost from tokens',
-  options: [
-    {
-      name: 'cost',
-      type: 10, // NUMBER
-      description: 'Starfall Token Cost (NPC)',
-      required: true
-    },
-    {
-      name: 'chest',
-      type: 10, // NUMBER
-      description: 'Starfall Token Chest',
-      required: true
-    },
-    {
-      name: 'solarbite',
-      type: 10, // NUMBER
-      description: 'Solarbite for the chest',
-      required: true
-    }
-  ],
+  data: new SlashCommandBuilder()
+    .setName('price')
+    .setDescription('Calculates gear cost from comma-separated numbers')
+    .addStringOption(option =>
+      option
+        .setName('numbers')
+        .setDescription('Enter: Starfall Token Cost, Starfall Token Chest, Solarbite Cost (comma-separated)')
+        .setRequired(true)
+    ),
   async execute(interaction) {
-    const cost = interaction.options.getNumber('cost');
-    const chest = interaction.options.getNumber('chest');
-    const solarbite = interaction.options.getNumber('solarbite');
+    try {
+      const input = interaction.options.getString('numbers');
+      const [starfallCost, chestSize, solarbite] = input.split(',').map(Number);
 
-    const result = ((cost / chest) * solarbite) * 0.94;
+      // Check if all numbers are valid
+      if ([starfallCost, chestSize, solarbite].some(isNaN)) {
+        throw new Error('Invalid numbers');
+      }
 
-    await interaction.reply(`Calculated result: ${result.toLocaleString()}`);
+      const result = ((starfallCost / chestSize) * solarbite) * 0.94;
+
+      await interaction.reply(`Result: **${result.toLocaleString()}**`);
+    } catch (err) {
+      await interaction.reply(
+        '⚠️ Error parsing input.\n' +
+        'Correct format: `Starfall Token Cost, Starfall Token Chest, Solarbite Cost (for Chest)`\n' +
+        'Example: `/price 5000000,340000,30`'
+      );
+    }
   }
 };
