@@ -1,27 +1,33 @@
-import { SlashCommandBuilder } from 'discord.js';
+export default {
+  name: 'price',
+  description: 'Calculate gear cost from tokens',
+  options: [
+    {
+      name: 'cost',
+      type: 10, // NUMBER
+      description: 'Starfall Token Cost (NPC)',
+      required: true
+    },
+    {
+      name: 'chest',
+      type: 10, // NUMBER
+      description: 'Starfall Token Chest',
+      required: true
+    },
+    {
+      name: 'solarbite',
+      type: 10, // NUMBER
+      description: 'Solarbite for the chest',
+      required: true
+    }
+  ],
+  async execute(interaction) {
+    const cost = interaction.options.getNumber('cost');
+    const chest = interaction.options.getNumber('chest');
+    const solarbite = interaction.options.getNumber('solarbite');
 
-export const data = new SlashCommandBuilder()
-  .setName('price')
-  .setDescription('Calculate gear cost from Starfall, chest, and Solarbite')
-  .addStringOption(option =>
-    option.setName('values')
-      .setDescription('StarfallCost,ChestSize,Solarbite')
-      .setRequired(true)
-  );
+    const result = ((cost / chest) * solarbite) * 0.94;
 
-export async function execute(interaction) {
-  const input = interaction.options.getString('values');
-  const parts = input.split(',').map(x => parseFloat(x.trim()));
-
-  if (parts.length !== 3 || parts.some(isNaN)) {
-    return interaction.reply({
-      content: '❌ Invalid input. Use: StarfallCost,ChestSize,Solarbite',
-      ephemeral: true
-    });
+    await interaction.reply(`Calculated result: ${result.toLocaleString()}`);
   }
-
-  const [starfallCost, chestSize, solarbite] = parts;
-  const result = ((starfallCost / chestSize) * solarbite) * 0.94;
-
-  return interaction.reply(`💰 Calculated price: ${result.toLocaleString()}`);
-}
+};
