@@ -3,7 +3,7 @@ import { SlashCommandBuilder } from 'discord.js';
 export default {
     data: new SlashCommandBuilder()
         .setName('price')
-        .setDescription('Calculate Gear Cost from input numbers.')
+        .setDescription('Calculates gear cost from Starfall and Solarbite values.')
         .addNumberOption(option =>
             option.setName('starfall_cost')
                   .setDescription('Starfall Token Cost (NPC)')
@@ -22,8 +22,15 @@ export default {
         const starfallChest = interaction.options.getNumber('starfall_chest');
         const solarbite = interaction.options.getNumber('solarbite');
 
-        const result = ((starfallCost / starfallChest) * solarbite * 0.94).toFixed(2);
+        if (!starfallCost || !starfallChest || !solarbite) {
+            return interaction.reply(
+                '❌ Please provide all numbers!\n' +
+                'Correct format: use the three input fields in Discord when typing `/price`.'
+            );
+        }
 
-        await interaction.reply(`Result: ${result}`);
+        const result = ((starfallCost / starfallChest) * solarbite * 0.94).toLocaleString();
+
+        await interaction.reply(`💰 Result: ${result}`);
     }
 };
