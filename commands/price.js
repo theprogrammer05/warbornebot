@@ -1,38 +1,36 @@
 import { SlashCommandBuilder } from 'discord.js';
 
 export default {
-  data: new SlashCommandBuilder()
-    .setName('price')
-    .setDescription('Calculates gear cost from comma-separated numbers')
-    .addStringOption(option =>
-      option
-        .setName('numbers')
-        .setDescription('Enter: Starfall Token Cost, Starfall Token Chest, Solarbite Cost (comma-separated)')
-        .setRequired(true)
-    ),
-  async execute(interaction) {
-    try {
-      let input = interaction.options.getString('numbers');
+    data: new SlashCommandBuilder()
+        .setName('price')
+        .setDescription('Calculate gear cost from Starfall, Chest, and Solarbite'),
+    async execute(interaction) {
+        const input = interaction.options.getString('input') || interaction.content;
 
-      // Remove all spaces
-      input = input.replace(/\s+/g, '');
+        try {
+            // Remove all spaces
+            const cleaned = input.replace(/\s+/g, '');
+            const parts = cleaned.split(',');
 
-      const [starfallCost, chestSize, solarbite] = input.split(',').map(Number);
+            if (parts.length !== 3) {
+                throw new Error('Invalid input');
+            }
 
-      // Check if all numbers are valid
-      if ([starfallCost, chestSize, solarbite].some(isNaN)) {
-        throw new Error('Invalid numbers');
-      }
+            const [starfallCost, starfallChest, solarbiteCost] = parts.map(Number);
 
-      const result = ((starfallCost / chestSize) * solarbite) * 0.94;
+            if (isNaN(starfallCost) || isNaN(starfallChest) || isNaN(solarbiteCost)) {
+                throw new Error('Invalid numbers');
+            }
 
-      await interaction.reply(`Result: **${result.toLocaleString()}**`);
-    } catch (err) {
-      await interaction.reply(
-        '⚠️ Error parsing input.\n' +
-        'Correct format: `Starfall Token Cost, Starfall Token Chest, Solarbite Cost (for Chest)`\n' +
-        'Example: `/price 5000000,340000,30`'
-      );
+            const result = ((starfallCost / starfallChest) * solarbiteCost) * 0.94;
+
+            await interaction.reply(`Calculated Gear Cost: **${Math.round(result)}**`);
+        } catch (err) {
+            await interaction.reply(
+                '❌ Invalid format.\n' +
+                'Correct format: `Starfall Token Cost, Starfall Token Chest, Solarbite Cost (for Chest)`\n' +
+                'Example: `5000000,340000,30`'
+            );
+        }
     }
-  }
 };
