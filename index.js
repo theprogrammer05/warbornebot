@@ -1,41 +1,57 @@
-require('dotenv').config();
-const { Client, GatewayIntentBits, REST, Routes, SlashCommandBuilder } = require('discord.js');
+// index.js
+import { Client, GatewayIntentBits } from 'discord.js';
+import { REST } from '@discordjs/rest';
+import { Routes } from 'discord-api-types/v10';
 
+// ------------------------
+// Check required environment variables
+// ------------------------
+const { DISCORD_TOKEN, CLIENT_ID, GUILD_ID } = process.env;
+
+if (!DISCORD_TOKEN || !CLIENT_ID || !GUILD_ID) {
+  console.error(
+    '❌ Missing required environment variables. Make sure DISCORD_TOKEN, CLIENT_ID, and GUILD_ID are set in Railway Variables.'
+  );
+  process.exit(1);
+}
+
+// ------------------------
+// Create Discord client
+// ------------------------
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 
-// Define simple commands
+// ------------------------
+// Define your slash commands here
+// ------------------------
 const commands = [
-  new SlashCommandBuilder().setName('ping').setDescription('Replies with Pong!'),
-  new SlashCommandBuilder().setName('hello').setDescription('Says hello back!')
-].map(cmd => cmd.toJSON());
+  {
+    name: 'ping',
+    description: 'Replies with Pong!',
+  },
+  {
+    name: 'hello',
+    description: 'Greets the user!',
+  },
+];
 
-// Register commands (for a single guild)
-const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
+// ------------------------
+// Register slash commands
+// ------------------------
+const rest = new REST({ version: '10' }).setToken(DISCORD_TOKEN);
+
 (async () => {
   try {
     console.log('Refreshing application (/) commands...');
-    await rest.put(
-      Routes.applicationGuildCommands(process.env.CLIENT_ID, process.env.GUILD_ID),
-      { body: commands },
-    );
-    console.log('Commands registered!');
+    await rest.put(Routes.applicationGuildCommands(CLIENT_ID, GUILD_ID), {
+      body: commands,
+    });
+    console.log('✅ Commands registered!');
   } catch (error) {
-    console.error(error);
+    console.error('Failed to register commands:', error);
   }
 })();
 
-client.on('clientReady', () => {
-  console.log(`✅ Logged in as ${client.user.tag}`);
-});
-
-client.on('interactionCreate', async interaction => {
-  if (!interaction.isChatInputCommand()) return;
-
-  if (interaction.commandName === 'ping') {
-    await interaction.reply('Pong!');
-  } else if (interaction.commandName === 'hello') {
-    await interaction.reply(`Hey there, ${interaction.user.username}! 👋`);
-  }
-});
-
-client.login(process.env.DISCORD_TOKEN);
+// ------------------------
+// Bot event listeners
+// ------------------------
+client.once('ready', () =>
