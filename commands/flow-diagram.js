@@ -1,54 +1,35 @@
-import { EmbedBuilder } from 'discord.js';
+import { SlashCommandBuilder } from "discord.js";
 
 export default {
-  name: 'flow-diagram',
-  description: 'Shows the bot flow and data structure for commands, JSON files, and cron jobs.',
+  data: new SlashCommandBuilder()
+    .setName("flow-diagram")
+    .setDescription("Shows how the bot works internally, including daily auto-schedule posting."),
   async execute(interaction) {
-    const embed = new EmbedBuilder()
-      .setTitle('🤖 Bot Flow Overview')
-      .setColor(0x00ffff)
-      .setDescription('A visual overview of how commands, JSON data, and cron jobs interact in the bot.')
-      .addFields(
-        {
-          name: '1️⃣ Commands (commands/)',
-          value: `• /price, /driftmark, /drifter, /equip → Display tier/calculation info\n` +
-                 `• /season-start → View or add/update schedule events\n` +
-                 `• /faq → View FAQ items\n` +
-                 `• /faq-add → Add new FAQ\n` +
-                 `• /faq-remove → Remove FAQ\n` +
-                 `• /faq-search → Search FAQ by keyword\n` +
-                 `• /flow-diagram → Show this flow diagram`,
-        },
-        {
-          name: '2️⃣ Data Storage',
-          value: `• schedule.json → Stores events by weekday\n` +
-                 `• faq.json → Stores FAQ questions & answers`,
-        },
-        {
-          name: '3️⃣ Cron Jobs (index.js)',
-          value: `• Daily message job → Posts today’s schedule at 9:00 AM\n` +
-                 `• cronJobs[] → Array holding all scheduled jobs\n` +
-                 `• /clear-cron → Stop all jobs`,
-        },
-        {
-          name: '4️⃣ Discord Interaction Flow',
-          value: `• User sends a slash command\n` +
-                 `• index.js dynamically loads commands\n` +
-                 `• Executes command logic\n` +
-                 `• Reads/writes JSON files as needed`,
-        },
-        {
-          name: '🌐 Environment Variables',
-          value: `• DISCORD_TOKEN\n• CLIENT_ID\n• GUILD_ID\n• ANNOUNCE_CHANNEL_ID`,
-        },
-        {
-          name: '💡 Notes',
-          value: `• Admin-only commands: /faq-add, /faq-remove, /season-start (with add_event)\n` +
-                 `• All dynamic data persists in JSON, no code edits needed for updates`,
-        }
-      )
-      .setFooter({ text: 'Bot System Flow Diagram' });
+    const diagram = `
+**WarborneBot Flow Diagram**
 
-    await interaction.reply({ embeds: [embed], ephemeral: false });
+🌀 **Startup**
+→ Loads environment variables (.env)
+→ Registers slash commands (/faq, /schedule, /flow-diagram)
+→ Reads schedule.json
+→ Logs in as bot user
+
+📅 **Daily Schedule Logic**
+→ Reads current weekday (e.g., "Tuesday")
+→ Finds matching event from schedule.json
+→ Posts automatic message to #announcements (set by ANNOUNCE_CHANNEL_ID)
+→ Reschedules itself to run again at the next midnight
+
+💬 **Commands**
+→ /faq → View or manage frequently asked questions
+→ /schedule → View weekly schedule dynamically
+→ /flow-diagram → Displays this flow
+
+🧠 **Persistence**
+→ schedule.json holds all day-specific messages
+→ Automatically adapts if you update schedule.json
+`;
+
+    await interaction.reply({ content: diagram, ephemeral: true });
   },
 };
