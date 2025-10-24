@@ -1,16 +1,22 @@
 import fs from 'fs';
 import path from 'path';
 import { Client, GatewayIntentBits, REST, Routes } from 'discord.js';
-import cron from 'node-cron';
 import dotenv from 'dotenv';
+import cron from 'node-cron';
+
 dotenv.config();
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
+
 const { DISCORD_TOKEN, CLIENT_ID, GUILD_ID, ANNOUNCE_CHANNEL_ID } = process.env;
 
-if (!DISCORD_TOKEN || !CLIENT_ID || !GUILD_ID || !ANNOUNCE_CHANNEL_ID) {
+if (!DISCORD_TOKEN || !CLIENT_ID || !GUILD_ID) {
   console.error('❌ Missing required environment variables.');
   process.exit(1);
+}
+
+if (!ANNOUNCE_CHANNEL_ID) {
+  console.warn('⚠️ ANNOUNCE_CHANNEL_ID not set — daily schedule will be disabled.');
 }
 
 // Load commands dynamically
@@ -28,28 +34,54 @@ for (const file of commandFiles) {
   commands.push(command.default);
 }
 
-// Register slash commands with Discord (guild-based)
+// Register commands with Discord
 const rest = new REST({ version: '10' }).setToken(DISCORD_TOKEN);
+
 (async () => {
   try {
     console.log('Started refreshing application (/) commands.');
 
-    // Map /price to include input option
     const formattedCommands = commands.map(cmd => {
-      if (cmd.name === 'price') {
-        return {
-          ...cmd,
-          options: [
-            {
-              name: 'numbers',
-              type: 3, // STRING
-              description: 'Starfall Token Cost For Equipment, Starfall Token Chest Cost, Solarbite Cost (for Chest). Example: "5m 340k 30"',
-              required: true
-            }
-          ]
-        };
+      switch (cmd.name) {
+        case 'price':
+          return {
+            ...cmd,
+            description: 'Calculates Solarbite break-even value',
+            options: [
+              {
+                name: 'numbers',
+                type: 3, // STRING
+                description: 'Equip cost / Chest cost / Solarbite cost',
+                required: true
+              }
+            ]
+          };
+        case 'faq':
+          return {
+            ...cmd,
+            description: 'View or update FAQ entries'
+          };
+        case 'season-start':
+          return {
+            ...cmd,
+            description: 'Set the start date for the season'
+          };
+        case 'flow-diagram':
+          return {
+            ...cmd,
+            description: 'Shows a flow diagram for bot commands'
+          };
+        case 'schedule':
+          return {
+            ...cmd,
+            description: 'View the current schedule for daily events'
+          };
+        default:
+          return {
+            ...cmd,
+            description: cmd.description?.slice(0, 100) || 'No description'
+          };
       }
-      return cmd;
     });
 
     await rest.put(
@@ -63,7 +95,7 @@ const rest = new REST({ version: '10' }).setToken(DISCORD_TOKEN);
   }
 })();
 
-// Handle slash command interactions
+// Handle interactions
 client.on('interactionCreate', async interaction => {
   if (!interaction.isChatInputCommand()) return;
 
@@ -78,66 +110,31 @@ client.on('interactionCreate', async interaction => {
   }
 });
 
-// --- Cron Jobs Setup ---
-const cronJobs = [];
-
-// Function to start daily schedule announcement
-function startDailySchedule() {
-  // Runs every day at 9:00 AM server time
-  const job = cron.schedule('0 9 * * *', async () => {
+// Daily schedule
+if (ANNOUNCE_CHANNEL_ID) {
+  cron.schedule('0 0 * * *', async () => { // Every day at midnight
     try {
       const channel = await client.channels.fetch(ANNOUNCE_CHANNEL_ID);
-      if (!channel) return console.error('❌ Announcement channel not found.');
+      if (!channel) return console.warn('⚠️ ANNOUNCE_CHANNEL_ID invalid');
 
-      const scheduleFile = path.join(process.cwd(), 'schedule.json');
-      if (!fs.existsSync(scheduleFile)) return;
+      // Load schedule from JSON file
+      const schedulePath = path.join(process.cwd(), 'schedule.json');
+      if (!fs.existsSync(schedulePath)) return;
 
-      const schedule = JSON.parse(fs.readFileSync(scheduleFile, 'utf8'));
-      const today = new Date();
-      const weekday = today.toLocaleDateString('en-US', { weekday: 'long' });
-      const event = schedule[weekday];
+      const scheduleData = JSON.parse(fs.readFileSync(schedulePath, 'utf8'));
 
-      if (event) {
-        await channel.send(`📅 **${weekday}**: ${event}`);
+      const now = new Date();
+      const dayName = now.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'America/Chicago' });
+
+      if (scheduleData[dayName]) {
+        await channel.send(`📅 **${dayName} Schedule:**\n${scheduleData[dayName]}`);
       }
     } catch (err) {
-      console.error('❌ Error in daily schedule cron job:', err);
+      console.error('❌ Error sending daily schedule:', err);
     }
   });
 
-  cronJobs.push(job);
   console.log('✅ Daily schedule cron job started.');
 }
 
-// Start cron jobs once the bot is ready
-client.once('ready', () => {
-  console.log(`✅ Bot logged in as ${client.user.tag}`);
-  startDailySchedule();
-});
-
-// --- Cron Job Management Commands (via interaction) ---
-commands.push({
-  name: 'list-cron',
-  description: 'List all active cron jobs.',
-  async execute(interaction) {
-    if (!interaction.memberPermissions.has('Administrator')) {
-      return interaction.reply({ content: '❌ Admins only.', ephemeral: true });
-    }
-    const lines = cronJobs.map((job, idx) => `${idx + 1}. ${job.running ? '✅ Running' : '❌ Stopped'}`);
-    await interaction.reply({ content: lines.join('\n') || 'No cron jobs.', ephemeral: false });
-  },
-});
-
-commands.push({
-  name: 'clear-cron',
-  description: 'Stop all cron jobs.',
-  async execute(interaction) {
-    if (!interaction.memberPermissions.has('Administrator')) {
-      return interaction.reply({ content: '❌ Admins only.', ephemeral: true });
-    }
-    cronJobs.forEach(job => job.stop());
-    await interaction.reply({ content: '✅ All cron jobs stopped.', ephemeral: false });
-  },
-});
-
-client.login(DISCORD_TOKEN).then(() => console.log('✅ Bot logged in successfully.'));
+client.login(DISCORD_TOKEN).then(() => console.log(`✅ Bot logged in as ${client.user.tag}`));

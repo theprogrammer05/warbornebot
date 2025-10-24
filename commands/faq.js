@@ -3,39 +3,95 @@ import path from 'path';
 
 export default {
   name: 'faq',
-  description: 'Displays all FAQ items with instructions for adding, removing, or searching them.',
+  description: 'Manage or view FAQ entries',
   async execute(interaction) {
-    const faqFile = path.join(process.cwd(), 'faq.json');
+    const subcommand = interaction.options.getSubcommand?.();
+    const faqPath = path.join(process.cwd(), 'faq.json');
 
-    if (!fs.existsSync(faqFile)) {
-      return interaction.reply({
-        content: '❌ FAQ file not found.',
-        ephemeral: true,
-      });
+    // Ensure FAQ file exists
+    if (!fs.existsSync(faqPath)) {
+      fs.writeFileSync(faqPath, JSON.stringify([]));
     }
 
-    const faq = JSON.parse(fs.readFileSync(faqFile, 'utf8'));
+    const faqData = JSON.parse(fs.readFileSync(faqPath, 'utf8'));
 
-    if (!faq.length) {
-      return interaction.reply({
-        content:
-          'ℹ️ There are no FAQ items yet.\nYou can add one using `/faq-add question:"..." answer:"..."`',
-        ephemeral: true,
-      });
+    switch (subcommand) {
+      case 'list':
+        if (faqData.length === 0) {
+          return interaction.reply('❌ No FAQ entries yet.');
+        }
+
+        const faqList = faqData
+          .map((item, i) => `**${i + 1}.** ${item.question}\n> ${item.answer}`)
+          .join('\n\n');
+
+        return interaction.reply({ content: faqList, ephemeral: true });
+
+      case 'add':
+        {
+          const question = interaction.options.getString('question');
+          const answer = interaction.options.getString('answer');
+
+          faqData.push({ question, answer });
+          fs.writeFileSync(faqPath, JSON.stringify(faqData, null, 2));
+
+          return interaction.reply(`✅ FAQ added:\n**Q:** ${question}\n**A:** ${answer}`);
+        }
+
+      case 'remove':
+        {
+          const index = interaction.options.getInteger('index');
+          if (index < 1 || index > faqData.length) {
+            return interaction.reply('❌ Invalid FAQ index.');
+          }
+
+          const removed = faqData.splice(index - 1, 1)[0];
+          fs.writeFileSync(faqPath, JSON.stringify(faqData, null, 2));
+
+          return interaction.reply(`✅ Removed FAQ:\n**Q:** ${removed.question}`);
+        }
+
+      default:
+        return interaction.reply('❌ Unknown subcommand.');
     }
-
-    const header = `📖 **FAQ:**\n` +
-      `*Use /faq-add to add, /faq-remove to remove, or /faq-search to find specific items.*\n\n`;
-
-    const lines = faq
-      .map((item, index) =>
-        `**${index + 1}. Q:** ${item.question}\n**A:** ${item.answer}`
-      )
-      .join('\n\n');
-
-    await interaction.reply({
-      content: header + lines,
-      ephemeral: false,
-    });
   },
+  options: [
+    {
+      name: 'list',
+      type: 1, // SUB_COMMAND
+      description: 'List all FAQ entries'
+    },
+    {
+      name: 'add',
+      type: 1, // SUB_COMMAND
+      description: 'Add a new FAQ entry',
+      options: [
+        {
+          name: 'question',
+          type: 3, // STRING
+          description: 'The question',
+          required: true
+        },
+        {
+          name: 'answer',
+          type: 3, // STRING
+          description: 'The answer',
+          required: true
+        }
+      ]
+    },
+    {
+      name: 'remove',
+      type: 1, // SUB_COMMAND
+      description: 'Remove an FAQ entry by index',
+      options: [
+        {
+          name: 'index',
+          type: 4, // INTEGER
+          description: 'The index of the FAQ to remove',
+          required: true
+        }
+      ]
+    }
+  ]
 };

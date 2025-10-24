@@ -2,5 +2,13 @@
   {
     "question": "What do I do?",
     "answer": "Ask Kyle."
+  },
+  {
+    "question": "How do I start the season?",
+    "answer": "Use the /season-start command with a date to set the season start."
+  },
+  {
+    "question": "How do I check the daily schedule?",
+    "answer": "Use the /schedule command to see today's events."
   }
 ]
