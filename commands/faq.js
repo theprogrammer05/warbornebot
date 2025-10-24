@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import fetch from 'node-fetch';
 
 const faqFile = path.join(process.cwd(), 'faq.json');
 
@@ -8,56 +9,56 @@ if (!fs.existsSync(faqFile)) {
   fs.writeFileSync(faqFile, JSON.stringify([]));
 }
 
-// GitHub integration
+const GITHUB_USER = process.env.GITHUB_USER;
+const GITHUB_REPO = process.env.GITHUB_REPO;
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
-const GITHUB_REPO = process.env.GITHUB_REPO; // e.g., "username/repo"
-const GITHUB_USER = process.env.GITHUB_USER; // e.g., "username"
+const BRANCH = 'main'; // adjust if your branch is different
 
-async function updateGithubFile() {
-  const content = fs.readFileSync(faqFile, 'utf8');
-  const base64Content = Buffer.from(content).toString('base64');
+async function updateGithubFile(faqs) {
+  try {
+    // Get the current file to retrieve SHA
+    const getResponse = await fetch(
+      `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/faq.json?ref=${BRANCH}`,
+      {
+        headers: {
+          Authorization: `token ${GITHUB_TOKEN}`,
+          Accept: 'application/vnd.github+json',
+        },
+      }
+    );
 
-  // Get the current SHA of the file
-  const getUrl = `https://api.github.com/repos/${GITHUB_REPO}/contents/faq.json`;
+    let sha;
+    if (getResponse.status === 200) {
+      const data = await getResponse.json();
+      sha = data.sha;
+    }
 
-  const getRes = await fetch(getUrl, {
-    headers: {
-      Authorization: `token ${GITHUB_TOKEN}`,
-      'User-Agent': GITHUB_USER,
-    },
-  });
+    // Update the file
+    const putResponse = await fetch(
+      `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/faq.json`,
+      {
+        method: 'PUT',
+        headers: {
+          Authorization: `token ${GITHUB_TOKEN}`,
+          Accept: 'application/vnd.github+json',
+        },
+        body: JSON.stringify({
+          message: 'Update FAQ via bot',
+          content: Buffer.from(JSON.stringify(faqs, null, 2)).toString('base64'),
+          sha: sha,
+          branch: BRANCH,
+        }),
+      }
+    );
 
-  let sha;
-  if (getRes.ok) {
-    const data = await getRes.json();
-    sha = data.sha;
-  } else if (getRes.status === 404) {
-    sha = undefined; // file doesn't exist yet
-  } else {
-    console.error('GitHub GET failed:', await getRes.text());
-    return;
-  }
-
-  // PUT request to create/update the file
-  const putRes = await fetch(getUrl, {
-    method: 'PUT',
-    headers: {
-      Authorization: `token ${GITHUB_TOKEN}`,
-      'User-Agent': GITHUB_USER,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      message: 'Update FAQs via bot',
-      content: base64Content,
-      sha,
-      branch: 'main', // adjust if using a different branch
-    }),
-  });
-
-  if (!putRes.ok) {
-    console.error('GitHub PUT failed:', await putRes.text());
-  } else {
-    console.log('GitHub FAQ update successful!');
+    const result = await putResponse.json();
+    if (!putResponse.ok) {
+      console.error('GitHub PUT failed:', result);
+    } else {
+      console.log('GitHub FAQ update successful.');
+    }
+  } catch (err) {
+    console.error('GitHub update failed:', err);
   }
 }
 
@@ -72,18 +73,18 @@ export default {
     },
     {
       name: 'add',
-      type: 1,
+      type: 1, // Subcommand
       description: 'Add a new FAQ',
       options: [
         {
           name: 'question',
-          type: 3,
+          type: 3, // STRING
           description: 'The FAQ question',
           required: true,
         },
         {
           name: 'answer',
-          type: 3,
+          type: 3, // STRING
           description: 'The FAQ answer',
           required: true,
         },
@@ -91,12 +92,12 @@ export default {
     },
     {
       name: 'remove',
-      type: 1,
+      type: 1, // Subcommand
       description: 'Remove an FAQ by number',
       options: [
         {
           name: 'number',
-          type: 4,
+          type: 4, // INTEGER
           description: 'The number of the FAQ to remove',
           required: true,
         },
@@ -112,24 +113,21 @@ export default {
       if (!faqs.length) {
         return interaction.reply({ content: '❌ No FAQs found.', ephemeral: true });
       }
-      const list = faqs
-        .map((faq, i) => `**${i + 1}.** ${faq.question} — ${faq.answer}`)
-        .join('\n');
+      const list = faqs.map((faq, i) => `**${i + 1}.** ${faq.question} — ${faq.answer}`).join('\n');
       return interaction.reply({ content: list, ephemeral: false });
     }
 
     if (sub === 'add') {
       const question = interaction.options.getString('question');
       const answer = interaction.options.getString('answer');
+
       faqs.push({ question, answer });
       fs.writeFileSync(faqFile, JSON.stringify(faqs, null, 2));
 
-      await updateGithubFile().catch(console.error);
+      // Update GitHub
+      await updateGithubFile(faqs);
 
-      return interaction.reply({
-        content: `✅ FAQ added:\n**Q:** ${question}\n**A:** ${answer}`,
-        ephemeral: true,
-      });
+      return interaction.reply({ content: `✅ FAQ added:\n**Q:** ${question}\n**A:** ${answer}`, ephemeral: true });
     }
 
     if (sub === 'remove') {
@@ -141,12 +139,10 @@ export default {
       const removed = faqs.splice(number - 1, 1)[0];
       fs.writeFileSync(faqFile, JSON.stringify(faqs, null, 2));
 
-      await updateGithubFile().catch(console.error);
+      // Update GitHub
+      await updateGithubFile(faqs);
 
-      return interaction.reply({
-        content: `✅ Removed FAQ:\n**Q:** ${removed.question}\n**A:** ${removed.answer}`,
-        ephemeral: true,
-      });
+      return interaction.reply({ content: `✅ Removed FAQ:\n**Q:** ${removed.question}\n**A:** ${removed.answer}`, ephemeral: true });
     }
   },
 };
