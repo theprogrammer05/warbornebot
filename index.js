@@ -16,6 +16,7 @@ if (!DISCORD_TOKEN || !CLIENT_ID || !GUILD_ID || !ANNOUNCE_CHANNEL_ID) {
 // Load commands dynamically
 const commandsPath = path.join(process.cwd(), 'commands');
 const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
+
 const commands = [];
 
 for (const file of commandFiles) {
@@ -27,16 +28,33 @@ for (const file of commandFiles) {
   commands.push(command.default);
 }
 
-// Register commands with Discord
+// Register commands with Discord (guild-specific)
 const rest = new REST({ version: '10' }).setToken(DISCORD_TOKEN);
 
 (async () => {
   try {
     console.log('Started refreshing application (/) commands.');
 
+    const formattedCommands = commands.map(cmd => {
+      if (cmd.name === 'price') {
+        return {
+          ...cmd,
+          options: [
+            {
+              name: 'numbers',
+              type: 3, // STRING
+              description: 'Starfall Token Cost For Equipment, Starfall Token Chest Cost, Solarbite Cost (for Chest)',
+              required: true
+            }
+          ]
+        };
+      }
+      return cmd;
+    });
+
     await rest.put(
       Routes.applicationGuildCommands(CLIENT_ID, GUILD_ID),
-      { body: commands }
+      { body: formattedCommands }
     );
 
     console.log('✅ Successfully registered commands.');
@@ -60,22 +78,32 @@ client.on('interactionCreate', async interaction => {
   }
 });
 
-// Daily schedule automatic message
-const scheduleFile = path.join(process.cwd(), 'schedule.json');
-if (fs.existsSync(scheduleFile)) {
+// Automatic daily schedule posting
+client.once('ready', async () => {
+  console.log(`✅ Bot logged in as ${client.user.tag}`);
+
+  const scheduleFile = path.join(process.cwd(), 'schedule.json');
+  if (!fs.existsSync(scheduleFile)) {
+    console.warn('⚠️ schedule.json not found. Automatic posting disabled.');
+    return;
+  }
+
   const schedule = JSON.parse(fs.readFileSync(scheduleFile, 'utf8'));
+  const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
+  // Post today's event immediately
   const now = new Date();
-  const daysOfWeek = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
   const today = daysOfWeek[now.getDay()];
-
   const event = schedule[today];
+
   if (event) {
     const channel = await client.channels.fetch(ANNOUNCE_CHANNEL_ID).catch(console.error);
     if (channel) {
       channel.send(`📅 **${today}'s Event:** ${event}`);
     }
   }
-}
 
-client.login(DISCORD_TOKEN).then(() => console.log(`✅ Bot logged in as ${client.user.tag}`));
+  // Optional: Schedule the next posts at midnight (can be implemented later)
+});
+
+client.login(DISCORD_TOKEN).then(() => console.log('✅ Bot logged in successfully.'));

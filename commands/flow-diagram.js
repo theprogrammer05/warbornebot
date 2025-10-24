@@ -1,9 +1,6 @@
-import { SlashCommandBuilder } from "discord.js";
-
 export default {
-  data: new SlashCommandBuilder()
-    .setName("flow-diagram")
-    .setDescription("Shows how the bot works internally, including daily auto-schedule posting."),
+  name: 'flow-diagram',
+  description: 'Shows how the bot works internally, including daily auto-schedule posting.',
   async execute(interaction) {
     const diagram = `
 **WarborneBot Flow Diagram**
@@ -18,7 +15,7 @@ export default {
 → Reads current weekday (e.g., "Tuesday")
 → Finds matching event from schedule.json
 → Posts automatic message to #announcements (set by ANNOUNCE_CHANNEL_ID)
-→ Reschedules itself to run again at the next midnight
+→ Automatically adapts if you update schedule.json
 
 💬 **Commands**
 → /faq → View or manage frequently asked questions
@@ -27,7 +24,7 @@ export default {
 
 🧠 **Persistence**
 → schedule.json holds all day-specific messages
-→ Automatically adapts if you update schedule.json
+→ Can update schedule.json to change daily messages
 `;
 
     await interaction.reply({ content: diagram, ephemeral: true });
