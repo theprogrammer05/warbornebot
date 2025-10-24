@@ -45,7 +45,7 @@ export default {
 
     // Correct formula:
     const trueValue = solarbite * (starfallCost / starfallChest);
-    const afterMarket = trueValue * 0.94;
+    const afterMarket = trueValue / 0.94;
 
     const formattedTrue = Number(trueValue).toLocaleString(undefined, { maximumFractionDigits: 2 });
     const formattedAfter = Number(afterMarket).toLocaleString(undefined, { maximumFractionDigits: 2 });
@@ -54,7 +54,7 @@ export default {
       content:
         `🌟 Solarbite Break Even Value for \`${userInput}\`:\n` +
         `• True Value: **${formattedTrue}**\n` +
-        `• After Market (0.94x): **${formattedAfter}**`
+        `• After Market (6 percent tax): **${formattedAfter}**`
     });
   }
 };
