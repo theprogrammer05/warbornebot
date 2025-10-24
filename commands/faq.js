@@ -9,16 +9,16 @@ if (!fs.existsSync(faqFile)) {
   fs.writeFileSync(faqFile, JSON.stringify([]));
 }
 
-// Initialize simple-git
-const git = simpleGit();
+// Initialize simple-git with the repo path
+const git = simpleGit(process.cwd());
 
 async function commitFaqChanges(message) {
   try {
-    await git.add(faqFile);
+    await git.add('faq.json');
     await git.commit(message);
-    await git.push();
+    await git.push('origin', 'main'); // Change 'main' to your default branch if different
   } catch (err) {
-    console.error('❌ GitHub commit failed:', err.message);
+    console.error('Git commit/push failed:', err);
   }
 }
 
@@ -84,7 +84,6 @@ export default {
       faqs.push({ question, answer });
       fs.writeFileSync(faqFile, JSON.stringify(faqs, null, 2));
 
-      // Commit changes to GitHub
       await commitFaqChanges(`Add FAQ: "${question}"`);
 
       return interaction.reply({ content: `✅ FAQ added:\n**Q:** ${question}\n**A:** ${answer}`, ephemeral: true });
@@ -99,7 +98,6 @@ export default {
       const removed = faqs.splice(number - 1, 1)[0];
       fs.writeFileSync(faqFile, JSON.stringify(faqs, null, 2));
 
-      // Commit changes to GitHub
       await commitFaqChanges(`Remove FAQ: "${removed.question}"`);
 
       return interaction.reply({ content: `✅ Removed FAQ:\n**Q:** ${removed.question}\n**A:** ${removed.answer}`, ephemeral: true });
