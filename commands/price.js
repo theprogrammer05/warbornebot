@@ -20,7 +20,9 @@ export default {
     if (parts.length !== 3) {
       return interaction.reply({
         content:
-          '❌ Invalid input count. Use: `StarfallTokenCost / StarfallTokenChest / SolarbiteCost`',
+          '❌ Invalid input count.\n' +
+          'Format: `StarfallTokenCost / StarfallTokenChest / SolarbiteCost` (or spaces)\n' +
+          'Shorthand allowed: k = 1k, m = 1M. Examples: `5m 340k 30` or `5000000/340000/30`',
         ephemeral: true,
       });
     }
