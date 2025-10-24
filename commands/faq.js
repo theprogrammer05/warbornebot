@@ -9,14 +9,21 @@ if (!fs.existsSync(faqFile)) {
   fs.writeFileSync(faqFile, JSON.stringify([]));
 }
 
-// Initialize simple-git with the repo path
-const git = simpleGit(process.cwd());
+// GitHub configuration
+const REPO_OWNER = process.env.GITHUB_USER;
+const REPO_NAME = process.env.GITHUB_REPO;
+const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 
-async function commitFaqChanges(message) {
+// Initialize simple-git
+const git = simpleGit();
+
+async function pushToGitHub() {
   try {
-    await git.add('faq.json');
-    await git.commit(message);
-    await git.push('origin', 'main'); // Change 'main' to your default branch if different
+    await git.add(faqFile);
+    await git.commit('Update FAQ via bot');
+    // Use HTTPS with token
+    const remoteUrl = `https://${GITHUB_TOKEN}@github.com/${REPO_OWNER}/${REPO_NAME}.git`;
+    await git.push(remoteUrl, 'main'); // Adjust branch if needed
   } catch (err) {
     console.error('Git commit/push failed:', err);
   }
@@ -29,7 +36,7 @@ export default {
     {
       name: 'list',
       type: 1, // Subcommand
-      description: 'List all FAQs'
+      description: 'List all FAQs',
     },
     {
       name: 'add',
@@ -40,15 +47,15 @@ export default {
           name: 'question',
           type: 3, // STRING
           description: 'The FAQ question',
-          required: true
+          required: true,
         },
         {
           name: 'answer',
           type: 3, // STRING
           description: 'The FAQ answer',
-          required: true
-        }
-      ]
+          required: true,
+        },
+      ],
     },
     {
       name: 'remove',
@@ -59,10 +66,10 @@ export default {
           name: 'number',
           type: 4, // INTEGER
           description: 'The number of the FAQ to remove',
-          required: true
-        }
-      ]
-    }
+          required: true,
+        },
+      ],
+    },
   ],
 
   async execute(interaction) {
@@ -84,7 +91,8 @@ export default {
       faqs.push({ question, answer });
       fs.writeFileSync(faqFile, JSON.stringify(faqs, null, 2));
 
-      await commitFaqChanges(`Add FAQ: "${question}"`);
+      // Push to GitHub
+      await pushToGitHub();
 
       return interaction.reply({ content: `✅ FAQ added:\n**Q:** ${question}\n**A:** ${answer}`, ephemeral: true });
     }
@@ -98,9 +106,10 @@ export default {
       const removed = faqs.splice(number - 1, 1)[0];
       fs.writeFileSync(faqFile, JSON.stringify(faqs, null, 2));
 
-      await commitFaqChanges(`Remove FAQ: "${removed.question}"`);
+      // Push to GitHub
+      await pushToGitHub();
 
       return interaction.reply({ content: `✅ Removed FAQ:\n**Q:** ${removed.question}\n**A:** ${removed.answer}`, ephemeral: true });
     }
-  }
+  },
 };
