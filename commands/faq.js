@@ -1,89 +1,131 @@
-import fs from 'fs';
-import path from 'path';
+import fs from "fs";
+import path from "path";
+import { SlashCommandBuilder } from "discord.js";
+import { execSync } from "child_process";
 
-const faqFile = path.join(process.cwd(), 'faq.json');
+const filePath = path.join(process.cwd(), "faq.json");
 
-// Ensure faq.json exists
-if (!fs.existsSync(faqFile)) {
-  fs.writeFileSync(faqFile, JSON.stringify([]));
+// --- 💾 Git commit helper ---
+async function commitToGitHub() {
+  const token = process.env.GITHUB_TOKEN;
+  const repo = process.env.GITHUB_REPO;
+  const user = process.env.GITHUB_USER;
+
+  if (!token || !repo || !user) {
+    console.log("❌ Missing GitHub environment variables. Skipping auto-commit.");
+    return "⚠️ Missing GitHub credentials — FAQ changes saved locally only.";
+  }
+
+  try {
+    execSync(`git config --global user.email "${user}@users.noreply.github.com"`);
+    execSync(`git config --global user.name "${user}"`);
+
+    execSync(`git add faq.json`);
+    execSync(`git commit -m "🤖 Auto-update FAQ file" || echo "No changes to commit"`);
+    execSync(`git push https://${user}:${token}@github.com/${repo}.git HEAD:main`);
+
+    console.log("✅ FAQ changes pushed to GitHub.");
+    return "✅ FAQ changes successfully pushed to GitHub.";
+  } catch (err) {
+    console.error("❌ Failed to push FAQ changes to GitHub:", err.message);
+    return "❌ Failed to push FAQ changes to GitHub.";
+  }
 }
 
+// --- 💬 Command definition ---
 export default {
-  name: 'faq',
-  description: 'Manage FAQs: list, add, or remove.',
-  options: [
-    {
-      name: 'list',
-      type: 1, // Subcommand
-      description: 'List all FAQs'
-    },
-    {
-      name: 'add',
-      type: 1, // Subcommand
-      description: 'Add a new FAQ',
-      options: [
-        {
-          name: 'question',
-          type: 3, // STRING
-          description: 'The FAQ question',
-          required: true
-        },
-        {
-          name: 'answer',
-          type: 3, // STRING
-          description: 'The FAQ answer',
-          required: true
-        }
-      ]
-    },
-    {
-      name: 'remove',
-      type: 1, // Subcommand
-      description: 'Remove an FAQ by number',
-      options: [
-        {
-          name: 'number',
-          type: 4, // INTEGER
-          description: 'The number of the FAQ to remove',
-          required: true
-        }
-      ]
-    }
-  ],
+  data: new SlashCommandBuilder()
+    .setName("faq")
+    .setDescription("Manage or view FAQ entries.")
+    .addSubcommand((sub) =>
+      sub.setName("list").setDescription("Show all FAQ entries.")
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("add")
+        .setDescription("Add a new FAQ entry.")
+        .addStringOption((opt) =>
+          opt.setName("question").setDescription("The FAQ question").setRequired(true)
+        )
+        .addStringOption((opt) =>
+          opt.setName("answer").setDescription("The FAQ answer").setRequired(true)
+        )
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("remove")
+        .setDescription("Remove an FAQ entry by question.")
+        .addStringOption((opt) =>
+          opt.setName("question").setDescription("Exact question to remove").setRequired(true)
+        )
+    ),
 
   async execute(interaction) {
-    const sub = interaction.options.getSubcommand();
-    const faqs = JSON.parse(fs.readFileSync(faqFile, 'utf8'));
+    const subcommand = interaction.options.getSubcommand();
+    const faqFileExists = fs.existsSync(filePath);
 
-    if (sub === 'list') {
-      if (!faqs.length) {
-        return interaction.reply({ content: '❌ No FAQs found.', ephemeral: true });
+    // Load existing FAQs
+    let faqs = {};
+    if (faqFileExists) {
+      try {
+        faqs = JSON.parse(fs.readFileSync(filePath, "utf8"));
+      } catch {
+        faqs = {};
+      }
+    }
+
+    // 🧾 /faq list
+    if (subcommand === "list") {
+      if (Object.keys(faqs).length === 0) {
+        return interaction.reply({
+          content: "📭 No FAQ entries found.",
+          ephemeral: true,
+        });
       }
 
-      const list = faqs.map((faq, i) => `**${i + 1}.** ${faq.question} — ${faq.answer}`).join('\n');
+      const list = Object.entries(faqs)
+        .map(([q, a]) => `**Q:** ${q}\n**A:** ${a}`)
+        .join("\n\n");
+
       return interaction.reply({ content: list, ephemeral: false });
     }
 
-    if (sub === 'add') {
-      const question = interaction.options.getString('question');
-      const answer = interaction.options.getString('answer');
+    // ➕ /faq add
+    if (subcommand === "add") {
+      const question = interaction.options.getString("question");
+      const answer = interaction.options.getString("answer");
 
-      faqs.push({ question, answer });
-      fs.writeFileSync(faqFile, JSON.stringify(faqs, null, 2));
+      faqs[question] = answer;
+      fs.writeFileSync(filePath, JSON.stringify(faqs, null, 2));
 
-      return interaction.reply({ content: `✅ FAQ added:\n**Q:** ${question}\n**A:** ${answer}`, ephemeral: true });
+      const gitMessage = await commitToGitHub();
+
+      return interaction.reply({
+        content: `✅ Added FAQ:\n**Q:** ${question}\n**A:** ${answer}\n\n${gitMessage}`,
+        ephemeral: false,
+      });
     }
 
-    if (sub === 'remove') {
-      const number = interaction.options.getInteger('number');
-      if (number < 1 || number > faqs.length) {
-        return interaction.reply({ content: '❌ Invalid FAQ number.', ephemeral: true });
+    // ❌ /faq remove
+    if (subcommand === "remove") {
+      const question = interaction.options.getString("question");
+
+      if (!faqs[question]) {
+        return interaction.reply({
+          content: `❌ No FAQ found with question: "${question}"`,
+          ephemeral: true,
+        });
       }
 
-      const removed = faqs.splice(number - 1, 1)[0];
-      fs.writeFileSync(faqFile, JSON.stringify(faqs, null, 2));
+      delete faqs[question];
+      fs.writeFileSync(filePath, JSON.stringify(faqs, null, 2));
 
-      return interaction.reply({ content: `✅ Removed FAQ:\n**Q:** ${removed.question}\n**A:** ${removed.answer}`, ephemeral: true });
+      const gitMessage = await commitToGitHub();
+
+      return interaction.reply({
+        content: `🗑️ Removed FAQ with question: "${question}"\n\n${gitMessage}`,
+        ephemeral: false,
+      });
     }
-  }
+  },
 };
