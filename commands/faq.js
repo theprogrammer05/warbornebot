@@ -3,7 +3,7 @@ import path from 'path';
 import fetch from 'node-fetch';
 import Discord from 'discord.js';
 
-const { ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType, InteractionResponseFlags } = Discord;
+const { ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType } = Discord;
 
 const faqFile = path.join(process.cwd(), 'faq.json');
 
@@ -18,24 +18,18 @@ const GITHUB_REPO = process.env.GITHUB_REPO; // format: "username/repo"
 const GITHUB_USER = process.env.GITHUB_USER;
 const BRANCH = process.env.BRANCH || 'main';
 
+// Quick Railway env debug (temporary)
+console.log('Railway env vars:');
+console.log('GITHUB_REPO:', process.env.GITHUB_REPO);
+console.log('GITHUB_TOKEN set?', !!process.env.GITHUB_TOKEN);
+console.log('GITHUB_USER:', process.env.GITHUB_USER);
+
 /**
  * Update GitHub file with FAQs (creates if missing)
  * Includes detailed debug logs
  */
 async function updateGitHub(faqs) {
-  const repo = GITHUB_REPO;
-  const token = GITHUB_TOKEN;
-  const user = GITHUB_USER;
-  const branch = BRANCH;
-
-  console.log('--- GitHub Update Debug ---');
-  console.log('Repo:', repo);
-  console.log('User-Agent:', user);
-  console.log('Token set?', !!token);
-  console.log('Branch:', branch);
-  console.log('Number of FAQs:', faqs.length);
-
-  if (!repo || !token || !user) {
+  if (!GITHUB_REPO || !GITHUB_TOKEN || !GITHUB_USER) {
     console.error('❌ Missing one of GITHUB_REPO, GITHUB_TOKEN, or GITHUB_USER');
     return;
   }
@@ -43,13 +37,13 @@ async function updateGitHub(faqs) {
   let sha;
 
   try {
-    const getUrl = `https://api.github.com/repos/${repo}/contents/faq.json?ref=${branch}`;
+    const getUrl = `https://api.github.com/repos/${GITHUB_REPO}/contents/faq.json?ref=${BRANCH}`;
     console.log('GET URL:', getUrl);
 
     const getRes = await fetch(getUrl, {
       headers: {
-        Authorization: `token ${token}`,
-        'User-Agent': user,
+        Authorization: `token ${GITHUB_TOKEN}`,
+        'User-Agent': GITHUB_USER,
       },
     });
 
@@ -72,22 +66,21 @@ async function updateGitHub(faqs) {
   }
 
   try {
-    const putUrl = `https://api.github.com/repos/${repo}/contents/faq.json`;
+    const putUrl = `https://api.github.com/repos/${GITHUB_REPO}/contents/faq.json`;
     console.log('PUT URL:', putUrl);
-    console.log('SHA sent to PUT:', sha);
 
     const putRes = await fetch(putUrl, {
       method: 'PUT',
       headers: {
-        Authorization: `token ${token}`,
-        'User-Agent': user,
+        Authorization: `token ${GITHUB_TOKEN}`,
+        'User-Agent': GITHUB_USER,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         message: 'Update FAQ via Discord bot',
         content: Buffer.from(JSON.stringify(faqs, null, 2)).toString('base64'),
         sha, // undefined if creating new file
-        branch,
+        branch: BRANCH,
       }),
     });
 
@@ -134,21 +127,19 @@ export default {
   ],
 
   async execute(interaction) {
-    // Safely get subcommand
     const sub = interaction.options.getSubcommand(false);
     if (!sub) {
       return interaction.reply({
         content: '❌ You must specify a subcommand: list, add, or remove.',
-        flags: InteractionResponseFlags.Ephemeral,
+        ephemeral: true,
       });
     }
 
-    // Load local FAQ file
     const faqs = JSON.parse(fs.readFileSync(faqFile, 'utf8'));
 
     // ---------- LIST ----------
     if (sub === 'list') {
-      if (!faqs.length) return interaction.reply({ content: '❌ No FAQs found.', flags: InteractionResponseFlags.Ephemeral });
+      if (!faqs.length) return interaction.reply({ content: '❌ No FAQs found.', ephemeral: true });
 
       const pageSize = 5;
       let page = 0;
@@ -173,7 +164,7 @@ export default {
       const collector = reply.createMessageComponentCollector({ componentType: ComponentType.Button, time: 60000 });
 
       collector.on('collect', (btn) => {
-        if (btn.user.id !== interaction.user.id) return btn.reply({ content: '❌ Not for you', flags: InteractionResponseFlags.Ephemeral });
+        if (btn.user.id !== interaction.user.id) return btn.reply({ content: '❌ Not for you', ephemeral: true });
 
         if (btn.customId === 'next') page++;
         if (btn.customId === 'prev') page--;
@@ -203,14 +194,14 @@ export default {
 
       return interaction.reply({
         content: `✅ FAQ added:\n**Q:** ${question}\n**A:** ${answer}`,
-        flags: InteractionResponseFlags.Ephemeral,
+        ephemeral: true,
       });
     }
 
     // ---------- REMOVE ----------
     if (sub === 'remove') {
       const number = interaction.options.getInteger('number');
-      if (number < 1 || number > faqs.length) return interaction.reply({ content: '❌ Invalid FAQ number.', flags: InteractionResponseFlags.Ephemeral });
+      if (number < 1 || number > faqs.length) return interaction.reply({ content: '❌ Invalid FAQ number.', ephemeral: true });
 
       const removed = faqs.splice(number - 1, 1)[0];
       fs.writeFileSync(faqFile, JSON.stringify(faqs, null, 2));
@@ -218,7 +209,7 @@ export default {
 
       return interaction.reply({
         content: `✅ Removed FAQ:\n**Q:** ${removed.question}\n**A:** ${removed.answer}`,
-        flags: InteractionResponseFlags.Ephemeral,
+        ephemeral: true,
       });
     }
   },
