@@ -10,5 +10,9 @@
   {
     "question": "How do I check the daily schedule?",
     "answer": "Use the /schedule command to see today's events."
+  },
+  {
+    "question": "Is Assy the best healer?",
+    "answer": "Yes."
   }
 ]
