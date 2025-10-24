@@ -54,7 +54,7 @@ export default {
       content:
         `🌟 Solarbite Break Even Value for \`${userInput}\`:\n` +
         `• True Value: **${formattedTrue}**\n` +
-        `• After Market (6 percent tax): **${formattedAfter}**`
+        `• Market Value (6%~): **${formattedAfter}**`
     });
   }
 };
