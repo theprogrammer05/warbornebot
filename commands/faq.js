@@ -1,13 +1,9 @@
 import fs from 'fs';
 import path from 'path';
 import fetch from 'node-fetch';
-import {
-  ActionRowBuilder,
-  ButtonBuilder,
-  ButtonStyle,
-  ComponentType,
-  InteractionResponseFlags
-} from 'discord.js';
+import Discord from 'discord.js';
+
+const { ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType, InteractionResponseFlags } = Discord;
 
 const faqFile = path.join(process.cwd(), 'faq.json');
 
