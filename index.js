@@ -2,27 +2,20 @@ import fs from 'fs';
 import path from 'path';
 import { Client, GatewayIntentBits, REST, Routes } from 'discord.js';
 import dotenv from 'dotenv';
-import cron from 'node-cron';
-
 dotenv.config();
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 
 const { DISCORD_TOKEN, CLIENT_ID, GUILD_ID, ANNOUNCE_CHANNEL_ID } = process.env;
 
-if (!DISCORD_TOKEN || !CLIENT_ID || !GUILD_ID) {
+if (!DISCORD_TOKEN || !CLIENT_ID || !GUILD_ID || !ANNOUNCE_CHANNEL_ID) {
   console.error('❌ Missing required environment variables.');
   process.exit(1);
-}
-
-if (!ANNOUNCE_CHANNEL_ID) {
-  console.warn('⚠️ ANNOUNCE_CHANNEL_ID not set — daily schedule will be disabled.');
 }
 
 // Load commands dynamically
 const commandsPath = path.join(process.cwd(), 'commands');
 const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
-
 const commands = [];
 
 for (const file of commandFiles) {
@@ -41,53 +34,28 @@ const rest = new REST({ version: '10' }).setToken(DISCORD_TOKEN);
   try {
     console.log('Started refreshing application (/) commands.');
 
+    // Add any options to commands if needed
     const formattedCommands = commands.map(cmd => {
-      switch (cmd.name) {
-        case 'price':
-          return {
-            ...cmd,
-            description: 'Calculates Solarbite break-even value',
-            options: [
-              {
-                name: 'numbers',
-                type: 3, // STRING
-                description: 'Equip cost / Chest cost / Solarbite cost',
-                required: true
-              }
-            ]
-          };
-        case 'faq':
-          return {
-            ...cmd,
-            description: 'View or update FAQ entries'
-          };
-        case 'season-start':
-          return {
-            ...cmd,
-            description: 'Set the start date for the season'
-          };
-        case 'flow-diagram':
-          return {
-            ...cmd,
-            description: 'Shows a flow diagram for bot commands'
-          };
-        case 'schedule':
-          return {
-            ...cmd,
-            description: 'View the current schedule for daily events'
-          };
-        default:
-          return {
-            ...cmd,
-            description: cmd.description?.slice(0, 100) || 'No description'
-          };
+      if (cmd.name === 'price') {
+        return {
+          ...cmd,
+          options: [
+            {
+              name: 'numbers',
+              type: 3, // STRING
+              description:
+                'Starfall Token Cost For Equipment, Starfall Token Chest Cost, Solarbite Cost (for Chest)',
+              required: true,
+            },
+          ],
+        };
       }
+      return cmd;
     });
 
-    await rest.put(
-      Routes.applicationGuildCommands(CLIENT_ID, GUILD_ID),
-      { body: formattedCommands }
-    );
+    await rest.put(Routes.applicationGuildCommands(CLIENT_ID, GUILD_ID), {
+      body: formattedCommands,
+    });
 
     console.log('✅ Successfully registered commands.');
   } catch (error) {
@@ -95,7 +63,25 @@ const rest = new REST({ version: '10' }).setToken(DISCORD_TOKEN);
   }
 })();
 
-// Handle interactions
+// Function to post today's schedule
+const postDailySchedule = async () => {
+  const scheduleFile = path.join(process.cwd(), 'schedule.json');
+  if (!fs.existsSync(scheduleFile)) return;
+
+  const schedule = JSON.parse(fs.readFileSync(scheduleFile, 'utf8'));
+  const today = new Date().toLocaleDateString('en-US', { weekday: 'long', timeZone: 'CST' });
+  const event = schedule[today];
+  if (!event) return;
+
+  try {
+    const channel = await client.channels.fetch(ANNOUNCE_CHANNEL_ID);
+    channel.send(`📅 **Today's Event (${today}):** ${event}`);
+  } catch (err) {
+    console.error('❌ Error posting daily schedule:', err);
+  }
+};
+
+// Handle command interactions
 client.on('interactionCreate', async interaction => {
   if (!interaction.isChatInputCommand()) return;
 
@@ -110,31 +96,23 @@ client.on('interactionCreate', async interaction => {
   }
 });
 
-// Daily schedule
-if (ANNOUNCE_CHANNEL_ID) {
-  cron.schedule('0 0 * * *', async () => { // Every day at midnight
-    try {
-      const channel = await client.channels.fetch(ANNOUNCE_CHANNEL_ID);
-      if (!channel) return console.warn('⚠️ ANNOUNCE_CHANNEL_ID invalid');
+// Schedule daily check at 8 AM CST
+const scheduleDailyCheck = () => {
+  const now = new Date();
+  const next8am = new Date();
+  next8am.setHours(8, 0, 0, 0);
 
-      // Load schedule from JSON file
-      const schedulePath = path.join(process.cwd(), 'schedule.json');
-      if (!fs.existsSync(schedulePath)) return;
+  if (now > next8am) next8am.setDate(next8am.getDate() + 1);
+  const delay = next8am - now;
 
-      const scheduleData = JSON.parse(fs.readFileSync(schedulePath, 'utf8'));
+  setTimeout(() => {
+    postDailySchedule();
+    setInterval(postDailySchedule, 24 * 60 * 60 * 1000); // every 24 hours
+  }, delay);
+};
 
-      const now = new Date();
-      const dayName = now.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'America/Chicago' });
-
-      if (scheduleData[dayName]) {
-        await channel.send(`📅 **${dayName} Schedule:**\n${scheduleData[dayName]}`);
-      }
-    } catch (err) {
-      console.error('❌ Error sending daily schedule:', err);
-    }
-  });
-
-  console.log('✅ Daily schedule cron job started.');
-}
-
-client.login(DISCORD_TOKEN).then(() => console.log(`✅ Bot logged in as ${client.user.tag}`));
+// Bot login
+client.login(DISCORD_TOKEN).then(() => {
+  console.log(`✅ Bot logged in as ${client.user.tag}`);
+  scheduleDailyCheck();
+});
