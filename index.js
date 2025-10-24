@@ -5,49 +5,77 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
-const { DISCORD_TOKEN, CLIENT_ID, GUILD_ID } = process.env;
 
-if (!DISCORD_TOKEN || !CLIENT_ID || !GUILD_ID) {
-  console.error('❌ Missing environment variables.');
+const { DISCORD_TOKEN, CLIENT_ID, GUILD_ID, ANNOUNCE_CHANNEL_ID } = process.env;
+
+if (!DISCORD_TOKEN || !CLIENT_ID || !GUILD_ID || !ANNOUNCE_CHANNEL_ID) {
+  console.error('❌ Missing required environment variables.');
   process.exit(1);
 }
 
-// Load commands
+// Load commands dynamically
 const commandsPath = path.join(process.cwd(), 'commands');
-const commandFiles = fs.readdirSync(commandsPath).filter(f => f.endsWith('.js'));
+const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
 const commands = [];
 
 for (const file of commandFiles) {
-  const cmd = await import(`./commands/${file}`);
-  if (!cmd.default?.name || !cmd.default?.description) continue;
-  commands.push(cmd.default);
+  const command = await import(`./commands/${file}`);
+  if (!command.default?.name || !command.default?.description) {
+    console.warn(`⚠️ Command file ${file} is missing required properties.`);
+    continue;
+  }
+  commands.push(command.default);
 }
 
-// Register with Discord
+// Register commands with Discord
 const rest = new REST({ version: '10' }).setToken(DISCORD_TOKEN);
 
 (async () => {
   try {
-    const formatted = commands.map(cmd => cmd.subcommands ? { name: cmd.name, description: cmd.description, options: cmd.subcommands } : cmd);
-    await rest.put(Routes.applicationGuildCommands(CLIENT_ID, GUILD_ID), { body: formatted });
-    console.log('✅ Commands registered.');
-  } catch (err) {
-    console.error('❌ Error registering commands:', err);
+    console.log('Started refreshing application (/) commands.');
+
+    await rest.put(
+      Routes.applicationGuildCommands(CLIENT_ID, GUILD_ID),
+      { body: commands }
+    );
+
+    console.log('✅ Successfully registered commands.');
+  } catch (error) {
+    console.error('❌ Error registering commands:', error);
   }
 })();
 
-// Handle interactions
+// Handle command interactions
 client.on('interactionCreate', async interaction => {
   if (!interaction.isChatInputCommand()) return;
-  const cmd = commands.find(c => c.name === interaction.commandName);
-  if (!cmd) return;
+
+  const command = commands.find(cmd => cmd.name === interaction.commandName);
+  if (!command) return;
 
   try {
-    await cmd.execute(interaction);
-  } catch (err) {
-    console.error(err);
-    await interaction.reply({ content: '❌ Error executing command.', ephemeral: true });
+    await command.execute(interaction);
+  } catch (error) {
+    console.error(error);
+    await interaction.reply({ content: '❌ There was an error executing this command.', ephemeral: true });
   }
 });
+
+// Daily schedule automatic message
+const scheduleFile = path.join(process.cwd(), 'schedule.json');
+if (fs.existsSync(scheduleFile)) {
+  const schedule = JSON.parse(fs.readFileSync(scheduleFile, 'utf8'));
+
+  const now = new Date();
+  const daysOfWeek = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const today = daysOfWeek[now.getDay()];
+
+  const event = schedule[today];
+  if (event) {
+    const channel = await client.channels.fetch(ANNOUNCE_CHANNEL_ID).catch(console.error);
+    if (channel) {
+      channel.send(`📅 **${today}'s Event:** ${event}`);
+    }
+  }
+}
 
 client.login(DISCORD_TOKEN).then(() => console.log(`✅ Bot logged in as ${client.user.tag}`));

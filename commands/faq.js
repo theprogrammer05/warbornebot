@@ -1,57 +1,89 @@
 import fs from 'fs';
 import path from 'path';
 
+const faqFile = path.join(process.cwd(), 'faq.json');
+
+// Ensure faq.json exists
+if (!fs.existsSync(faqFile)) {
+  fs.writeFileSync(faqFile, JSON.stringify([]));
+}
+
 export default {
   name: 'faq',
-  description: 'Manage FAQs dynamically. Use subcommands: list, add, remove.',
-  subcommands: [
+  description: 'Manage FAQs: list, add, or remove.',
+  options: [
     {
       name: 'list',
-      description: 'List all FAQs.'
+      type: 1, // Subcommand
+      description: 'List all FAQs'
     },
     {
       name: 'add',
-      description: 'Add a new FAQ.',
+      type: 1, // Subcommand
+      description: 'Add a new FAQ',
       options: [
-        { name: 'question', type: 3, description: 'The FAQ question', required: true },
-        { name: 'answer', type: 3, description: 'The FAQ answer', required: true }
+        {
+          name: 'question',
+          type: 3, // STRING
+          description: 'The FAQ question',
+          required: true
+        },
+        {
+          name: 'answer',
+          type: 3, // STRING
+          description: 'The FAQ answer',
+          required: true
+        }
       ]
     },
     {
       name: 'remove',
-      description: 'Remove an FAQ by its number.',
+      type: 1, // Subcommand
+      description: 'Remove an FAQ by number',
       options: [
-        { name: 'number', type: 4, description: 'The FAQ number to remove', required: true }
+        {
+          name: 'number',
+          type: 4, // INTEGER
+          description: 'The number of the FAQ to remove',
+          required: true
+        }
       ]
     }
   ],
+
   async execute(interaction) {
-    const faqFile = path.join(process.cwd(), 'faq.json');
-    if (!fs.existsSync(faqFile)) fs.writeFileSync(faqFile, JSON.stringify([]));
-
+    const sub = interaction.options.getSubcommand();
     const faqs = JSON.parse(fs.readFileSync(faqFile, 'utf8'));
-    const subcommand = interaction.options.getSubcommand();
 
-    if (subcommand === 'list') {
-      if (!faqs.length) return interaction.reply({ content: '📭 No FAQs available.', ephemeral: true });
-      const list = faqs.map((f, i) => `${i + 1}. **${f.question}**: ${f.answer}`).join('\n');
-      return interaction.reply({ content: `📖 **FAQs:**\n${list}`, ephemeral: false });
+    if (sub === 'list') {
+      if (!faqs.length) {
+        return interaction.reply({ content: '❌ No FAQs found.', ephemeral: true });
+      }
+
+      const list = faqs.map((faq, i) => `**${i + 1}.** ${faq.question} — ${faq.answer}`).join('\n');
+      return interaction.reply({ content: list, ephemeral: false });
     }
 
-    if (subcommand === 'add') {
+    if (sub === 'add') {
       const question = interaction.options.getString('question');
       const answer = interaction.options.getString('answer');
+
       faqs.push({ question, answer });
       fs.writeFileSync(faqFile, JSON.stringify(faqs, null, 2));
-      return interaction.reply({ content: `✅ FAQ added:\n**${question}**: ${answer}` });
+
+      return interaction.reply({ content: `✅ FAQ added:\n**Q:** ${question}\n**A:** ${answer}`, ephemeral: true });
     }
 
-    if (subcommand === 'remove') {
+    if (sub === 'remove') {
       const number = interaction.options.getInteger('number');
-      if (number < 1 || number > faqs.length) return interaction.reply({ content: '❌ Invalid FAQ number.', ephemeral: true });
+      if (number < 1 || number > faqs.length) {
+        return interaction.reply({ content: '❌ Invalid FAQ number.', ephemeral: true });
+      }
+
       const removed = faqs.splice(number - 1, 1)[0];
       fs.writeFileSync(faqFile, JSON.stringify(faqs, null, 2));
-      return interaction.reply({ content: `🗑️ Removed FAQ:\n**${removed.question}**: ${removed.answer}` });
+
+      return interaction.reply({ content: `✅ Removed FAQ:\n**Q:** ${removed.question}\n**A:** ${removed.answer}`, ephemeral: true });
     }
   }
 };
