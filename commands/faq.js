@@ -1,22 +1,22 @@
 import fs from 'fs';
 import path from 'path';
 import fetch from 'node-fetch';
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType } from 'discord.js';
 
 const faqFile = path.join(process.cwd(), 'faq.json');
 
-// Ensure faq.json exists locally
 if (!fs.existsSync(faqFile)) {
   fs.writeFileSync(faqFile, JSON.stringify([]));
 }
 
-const GITHUB_REPO = process.env.GITHUB_REPO; // e.g., theprogrammer05/warbornebot
-const GITHUB_TOKEN = process.env.GITHUB_TOKEN; // your personal access token
-const GITHUB_USER = process.env.GITHUB_USER; // e.g., theprogrammer05
-const BRANCH = 'main';
+// GitHub info
+const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
+const GITHUB_REPO = process.env.GITHUB_REPO;
+const GITHUB_USER = process.env.GITHUB_USER;
+const BRANCH = process.env.BRANCH || 'main';
 
-async function githubUpdate(contentObj, message) {
+async function updateGitHub(faqs) {
   try {
-    // 1️⃣ Get current file SHA
     const getRes = await fetch(
       `https://api.github.com/repos/${GITHUB_REPO}/contents/faq.json?ref=${BRANCH}`,
       {
@@ -28,10 +28,8 @@ async function githubUpdate(contentObj, message) {
     );
 
     if (!getRes.ok) throw new Error(`GitHub GET failed: ${getRes.status}`);
-    const data = await getRes.json();
-    const sha = data.sha;
+    const fileData = await getRes.json();
 
-    // 2️⃣ Update via PUT
     const putRes = await fetch(
       `https://api.github.com/repos/${GITHUB_REPO}/contents/faq.json`,
       {
@@ -42,9 +40,9 @@ async function githubUpdate(contentObj, message) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          message,
-          content: Buffer.from(JSON.stringify(contentObj, null, 2)).toString('base64'),
-          sha,
+          message: 'Update FAQ via Discord bot',
+          content: Buffer.from(JSON.stringify(faqs, null, 2)).toString('base64'),
+          sha: fileData.sha,
           branch: BRANCH,
         }),
       }
@@ -52,26 +50,46 @@ async function githubUpdate(contentObj, message) {
 
     if (!putRes.ok) {
       const errText = await putRes.text();
-      throw new Error(`GitHub PUT failed: ${errText}`);
+      console.error('GitHub PUT failed:', errText);
+    } else {
+      console.log('✅ FAQ pushed to GitHub successfully.');
     }
-    console.log('GitHub update successful');
   } catch (err) {
-    console.error('GitHub update failed:', err.message);
+    console.error('GitHub update failed:', err);
   }
+}
+
+// Helper for paginating FAQs
+function paginate(array, page_size, page_number) {
+  return array.slice(page_number * page_size, (page_number + 1) * page_size);
 }
 
 export default {
   name: 'faq',
   description: 'Manage FAQs: list, add, or remove.',
   options: [
-    { name: 'list', type: 1, description: 'List all FAQs' },
+    {
+      name: 'list',
+      type: 1,
+      description: 'List all FAQs',
+    },
     {
       name: 'add',
       type: 1,
       description: 'Add a new FAQ',
       options: [
-        { name: 'question', type: 3, description: 'The FAQ question', required: true },
-        { name: 'answer', type: 3, description: 'The FAQ answer', required: true },
+        {
+          name: 'question',
+          type: 3,
+          description: 'The FAQ question',
+          required: true,
+        },
+        {
+          name: 'answer',
+          type: 3,
+          description: 'The FAQ answer',
+          required: true,
+        },
       ],
     },
     {
@@ -79,19 +97,84 @@ export default {
       type: 1,
       description: 'Remove an FAQ by number',
       options: [
-        { name: 'number', type: 4, description: 'The number of the FAQ to remove', required: true },
+        {
+          name: 'number',
+          type: 4,
+          description: 'The number of the FAQ to remove',
+          required: true,
+        },
       ],
     },
   ],
 
   async execute(interaction) {
-    const sub = interaction.options.getSubcommand();
+    let sub;
+    try {
+      sub = interaction.options.getSubcommand();
+    } catch (err) {
+      return interaction.reply({
+        content: '❌ You must specify a subcommand: list, add, or remove.',
+        ephemeral: true,
+      });
+    }
+
     const faqs = JSON.parse(fs.readFileSync(faqFile, 'utf8'));
 
     if (sub === 'list') {
-      if (!faqs.length) return interaction.reply({ content: '❌ No FAQs found.', ephemeral: true });
-      const list = faqs.map((faq, i) => `**${i + 1}.** ${faq.question} — ${faq.answer}`).join('\n');
-      return interaction.reply({ content: list, ephemeral: false });
+      if (!faqs.length)
+        return interaction.reply({ content: '❌ No FAQs found.', ephemeral: true });
+
+      const pageSize = 5;
+      let page = 0;
+
+      const getContent = (page) =>
+        paginate(faqs, pageSize, page)
+          .map((faq, i) => `**${i + 1 + page * pageSize}.** ${faq.question} — ${faq.answer}`)
+          .join('\n');
+
+      const row = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId('prev')
+          .setLabel('⬅️ Previous')
+          .setStyle(ButtonStyle.Primary)
+          .setDisabled(true),
+        new ButtonBuilder()
+          .setCustomId('next')
+          .setLabel('Next ➡️')
+          .setStyle(ButtonStyle.Primary)
+          .setDisabled(faqs.length <= pageSize)
+      );
+
+      const reply = await interaction.reply({
+        content: getContent(page),
+        components: [row],
+        ephemeral: false,
+        fetchReply: true,
+      });
+
+      const collector = reply.createMessageComponentCollector({
+        componentType: ComponentType.Button,
+        time: 60000,
+      });
+
+      collector.on('collect', (btn) => {
+        if (btn.user.id !== interaction.user.id) return btn.reply({ content: '❌ Not for you', ephemeral: true });
+
+        if (btn.customId === 'next') page++;
+        if (btn.customId === 'prev') page--;
+
+        row.components[0].setDisabled(page === 0);
+        row.components[1].setDisabled((page + 1) * pageSize >= faqs.length);
+
+        btn.update({ content: getContent(page), components: [row] });
+      });
+
+      collector.on('end', () => {
+        row.components.forEach((btn) => btn.setDisabled(true));
+        interaction.editReply({ components: [row] }).catch(() => {});
+      });
+
+      return;
     }
 
     if (sub === 'add') {
@@ -100,11 +183,12 @@ export default {
 
       faqs.push({ question, answer });
       fs.writeFileSync(faqFile, JSON.stringify(faqs, null, 2));
+      await updateGitHub(faqs);
 
-      // Push to GitHub
-      await githubUpdate(faqs, `Add FAQ: ${question}`);
-
-      return interaction.reply({ content: `✅ FAQ added:\n**Q:** ${question}\n**A:** ${answer}`, ephemeral: true });
+      return interaction.reply({
+        content: `✅ FAQ added:\n**Q:** ${question}\n**A:** ${answer}`,
+        ephemeral: true,
+      });
     }
 
     if (sub === 'remove') {
@@ -114,9 +198,7 @@ export default {
 
       const removed = faqs.splice(number - 1, 1)[0];
       fs.writeFileSync(faqFile, JSON.stringify(faqs, null, 2));
-
-      // Push to GitHub
-      await githubUpdate(faqs, `Remove FAQ: ${removed.question}`);
+      await updateGitHub(faqs);
 
       return interaction.reply({
         content: `✅ Removed FAQ:\n**Q:** ${removed.question}\n**A:** ${removed.answer}`,
