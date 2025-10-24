@@ -5,7 +5,6 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
-
 const { DISCORD_TOKEN, CLIENT_ID, GUILD_ID, ANNOUNCE_CHANNEL_ID } = process.env;
 
 if (!DISCORD_TOKEN || !CLIENT_ID || !GUILD_ID || !ANNOUNCE_CHANNEL_ID) {
@@ -27,59 +26,22 @@ for (const file of commandFiles) {
   commands.push(command.default);
 }
 
-// Register commands with Discord
+// Register commands with Discord (guild only)
 const rest = new REST({ version: '10' }).setToken(DISCORD_TOKEN);
 
 (async () => {
   try {
-    console.log('Started refreshing application (/) commands.');
+    console.log('Clearing old guild commands...');
+    await rest.put(Routes.applicationGuildCommands(CLIENT_ID, GUILD_ID), { body: [] });
+    console.log('✅ Old guild commands cleared.');
 
-    // Add any options to commands if needed
-    const formattedCommands = commands.map(cmd => {
-      if (cmd.name === 'price') {
-        return {
-          ...cmd,
-          options: [
-            {
-              name: 'numbers',
-              type: 3, // STRING
-              description:
-                'Starfall Token Cost For Equipment, Starfall Token Chest Cost, Solarbite Cost (for Chest)',
-              required: true,
-            },
-          ],
-        };
-      }
-      return cmd;
-    });
-
-    await rest.put(Routes.applicationGuildCommands(CLIENT_ID, GUILD_ID), {
-      body: formattedCommands,
-    });
-
-    console.log('✅ Successfully registered commands.');
+    console.log('Registering current commands...');
+    await rest.put(Routes.applicationGuildCommands(CLIENT_ID, GUILD_ID), { body: commands });
+    console.log('✅ Current commands registered.');
   } catch (error) {
     console.error('❌ Error registering commands:', error);
   }
 })();
-
-// Function to post today's schedule
-const postDailySchedule = async () => {
-  const scheduleFile = path.join(process.cwd(), 'schedule.json');
-  if (!fs.existsSync(scheduleFile)) return;
-
-  const schedule = JSON.parse(fs.readFileSync(scheduleFile, 'utf8'));
-  const today = new Date().toLocaleDateString('en-US', { weekday: 'long', timeZone: 'CST' });
-  const event = schedule[today];
-  if (!event) return;
-
-  try {
-    const channel = await client.channels.fetch(ANNOUNCE_CHANNEL_ID);
-    channel.send(`📅 **Today's Event (${today}):** ${event}`);
-  } catch (err) {
-    console.error('❌ Error posting daily schedule:', err);
-  }
-};
 
 // Handle command interactions
 client.on('interactionCreate', async interaction => {
@@ -96,23 +58,27 @@ client.on('interactionCreate', async interaction => {
   }
 });
 
-// Schedule daily check at 8 AM CST
-const scheduleDailyCheck = () => {
-  const now = new Date();
-  const next8am = new Date();
-  next8am.setHours(8, 0, 0, 0);
-
-  if (now > next8am) next8am.setDate(next8am.getDate() + 1);
-  const delay = next8am - now;
-
-  setTimeout(() => {
-    postDailySchedule();
-    setInterval(postDailySchedule, 24 * 60 * 60 * 1000); // every 24 hours
-  }, delay);
-};
-
-// Bot login
-client.login(DISCORD_TOKEN).then(() => {
+// Automatic daily announcement based on schedule.json
+client.on('ready', async () => {
   console.log(`✅ Bot logged in as ${client.user.tag}`);
-  scheduleDailyCheck();
+
+  const channel = await client.channels.fetch(ANNOUNCE_CHANNEL_ID);
+  if (!channel) {
+    console.error('❌ Announcement channel not found.');
+    return;
+  }
+
+  const scheduleFile = path.join(process.cwd(), 'schedule.json');
+  if (!fs.existsSync(scheduleFile)) {
+    console.error('❌ schedule.json not found.');
+    return;
+  }
+
+  const schedule = JSON.parse(fs.readFileSync(scheduleFile, 'utf8'));
+  const day = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+  const message = schedule[day] || 'No events scheduled for today.';
+
+  channel.send(`📅 **Today (${day}):** ${message}`);
 });
+
+client.login(DISCORD_TOKEN).then(() => console.log('✅ Bot logged in successfully.'));
