@@ -59,5 +59,5 @@ export default {
       fs.writeFileSync(faqFile, JSON.stringify(faqs, null, 2));
       return interaction.reply({ content: `✅ Removed FAQ: "${question}"`, ephemeral: true });
     }
-  }
+  },
 };
