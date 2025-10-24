@@ -6,9 +6,9 @@ dotenv.config();
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 
-const { DISCORD_TOKEN, CLIENT_ID } = process.env;
+const { DISCORD_TOKEN, CLIENT_ID, GUILD_ID } = process.env;
 
-if (!DISCORD_TOKEN || !CLIENT_ID) {
+if (!DISCORD_TOKEN || !CLIENT_ID || !GUILD_ID) {
   console.error('❌ Missing required environment variables.');
   process.exit(1);
 }
@@ -28,14 +28,14 @@ for (const file of commandFiles) {
   commands.push(command.default);
 }
 
-// Register commands globally
+// Register commands with Discord
 const rest = new REST({ version: '10' }).setToken(DISCORD_TOKEN);
 
 (async () => {
   try {
     console.log('Started refreshing application (/) commands.');
 
-    // Add options for price command
+    // Map /price to include input option
     const formattedCommands = commands.map(cmd => {
       if (cmd.name === 'price') {
         return {
@@ -44,20 +44,21 @@ const rest = new REST({ version: '10' }).setToken(DISCORD_TOKEN);
             {
               name: 'numbers',
               type: 3, // STRING
-              description:
-                'Starfall Token Cost For Equipment, Starfall Token Chest Cost, Solarbite Cost (for Chest)',
-              required: true,
-            },
-          ],
+              description: 'Starfall Token Cost For Equipment, Starfall Token Chest Cost, Solarbite Cost (for Chest)',
+              required: true
+            }
+          ]
         };
       }
       return cmd;
     });
 
-    // Global registration (no GUILD_ID)
-    await rest.put(Routes.applicationCommands(CLIENT_ID), { body: formattedCommands });
+    await rest.put(
+      Routes.applicationGuildCommands(CLIENT_ID, GUILD_ID),
+      { body: formattedCommands }
+    );
 
-    console.log('✅ Successfully registered commands globally.');
+    console.log('✅ Successfully registered commands.');
   } catch (error) {
     console.error('❌ Error registering commands:', error);
   }
@@ -74,10 +75,7 @@ client.on('interactionCreate', async interaction => {
     await command.execute(interaction);
   } catch (error) {
     console.error(error);
-    await interaction.reply({
-      content: '❌ There was an error executing this command.',
-      ephemeral: true,
-    });
+    await interaction.reply({ content: '❌ There was an error executing this command.', ephemeral: true });
   }
 });
 
