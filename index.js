@@ -42,9 +42,9 @@ const rest = new REST({ version: '10' }).setToken(DISCORD_TOKEN);
           ...cmd,
           options: [
             {
-              name: 'StarfallTokenCost / StarfallTokenChest / SolarbiteCost',
+              name: 'numbers',
               type: 3, // STRING
-              description: 'Starfall Token Cost, Starfall Token Chest, Solarbite Cost (for Chest)',
+              description: 'Starfall Token Cost For Equipment, Starfall Token Chest Cost, Solarbite Cost (for Chest)',
               required: true
             }
           ]

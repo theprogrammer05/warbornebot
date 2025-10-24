@@ -7,7 +7,7 @@ export default {
       return interaction.reply({
         content:
           '❌ You must provide numbers.\n' +
-          'Format: `StarfallTokenCost / StarfallTokenChest / SolarbiteCost` (or spaces)\n' +
+          'Format: `equipStarfallCost / starfallChestCost / solarbiteStarfallChestCost` (or spaces)\n' +
           'Shorthand allowed: k = 1k, m = 1M. Examples: `5m 340k 30` or `5000000/340000/30`',
         ephemeral: true,
       });
@@ -21,7 +21,7 @@ export default {
       return interaction.reply({
         content:
           '❌ Invalid input count.\n' +
-          'Format: `StarfallTokenCost / StarfallTokenChest / SolarbiteCost` (or spaces)\n' +
+          'Format: `equipStarfallCost / starfallChestCost / solarbiteStarfallChestCost` (or spaces)\n' +
           'Shorthand allowed: k = 1k, m = 1M. Examples: `5m 340k 30` or `5000000/340000/30`',
         ephemeral: true,
       });
@@ -33,11 +33,11 @@ export default {
       return parseFloat(s);
     };
 
-    const starfallCost = parse(parts[0]);
-    const starfallChest = parse(parts[1]);
-    const solarbite = parse(parts[2]);
+    const equipStarfallCost = parse(parts[0]);
+    const starfallChestCost = parse(parts[1]);
+    const solarbiteStarfallChestCost = parse(parts[2]);
 
-    if ([starfallCost, starfallChest, solarbite].some(isNaN) || starfallChest === 0) {
+    if ([equipStarfallCost, starfallChestCost, solarbiteStarfallChestCost].some(isNaN) || starfallChest === 0) {
       return interaction.reply({
         content:
           '❌ Values must be numbers and chest size cannot be zero. Example: `5m 340k 30`',
@@ -46,7 +46,7 @@ export default {
     }
 
     // Correct formula:
-    const trueValue = solarbite * (starfallCost / starfallChest);
+    const trueValue = solarbiteStarfallChestCost * (equipStarfallCost / starfallChestCost);
     const afterMarket = trueValue / 0.94;
 
     const formattedTrue = Number(trueValue).toLocaleString(undefined, { maximumFractionDigits: 2 });
