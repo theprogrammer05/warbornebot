@@ -3,19 +3,14 @@ import path from 'path';
 
 const faqFile = path.join(process.cwd(), 'faq.json');
 
-// Ensure faq.json exists
-if (!fs.existsSync(faqFile)) {
-  fs.writeFileSync(faqFile, JSON.stringify([]));
-}
-
 export default {
   name: 'faq',
-  description: 'Manage FAQs (list, add, remove, search)',
-  options: [
-    { name: 'list', type: 1, description: 'List all FAQs' },
+  description: 'Manage or view FAQs',
+  // Declare your subcommands here
+  subcommands: [
+    { name: 'list', description: 'List all FAQs' },
     {
       name: 'add',
-      type: 1,
       description: 'Add a new FAQ',
       options: [
         { name: 'question', type: 3, description: 'FAQ question', required: true },
@@ -24,7 +19,6 @@ export default {
     },
     {
       name: 'remove',
-      type: 1,
       description: 'Remove an FAQ by index',
       options: [
         { name: 'index', type: 4, description: 'Index of FAQ to remove', required: true }
@@ -32,57 +26,48 @@ export default {
     },
     {
       name: 'search',
-      type: 1,
-      description: 'Search FAQs for a term',
+      description: 'Search FAQs',
       options: [
         { name: 'term', type: 3, description: 'Search term', required: true }
       ]
     }
   ],
+
   async execute(interaction) {
     const subcommand = interaction.options.getSubcommand();
-    const faqs = JSON.parse(fs.readFileSync(faqFile, 'utf8'));
 
-    if (subcommand === 'list') {
-      if (faqs.length === 0) {
-        return interaction.reply({ content: '❌ No FAQs available.', ephemeral: true });
-      }
-      const formatted = faqs.map((f, i) => `**${i + 1}.** Q: ${f.question}\nA: ${f.answer}`).join('\n\n');
-      return interaction.reply({ content: formatted, ephemeral: false });
+    let faqs = [];
+    if (fs.existsSync(faqFile)) {
+      faqs = JSON.parse(fs.readFileSync(faqFile, 'utf8'));
     }
 
-    if (subcommand === 'add') {
-      const question = interaction.options.getString('question');
-      const answer = interaction.options.getString('answer');
+    switch (subcommand) {
+      case 'list':
+        if (!faqs.length) return interaction.reply('❌ No FAQs yet.');
+        return interaction.reply(
+          faqs.map((f, i) => `**${i + 1}.** Q: ${f.question} | A: ${f.answer}`).join('\n')
+        );
 
-      faqs.push({ question, answer });
-      fs.writeFileSync(faqFile, JSON.stringify(faqs, null, 2));
+      case 'add':
+        const question = interaction.options.getString('question');
+        const answer = interaction.options.getString('answer');
+        faqs.push({ question, answer });
+        fs.writeFileSync(faqFile, JSON.stringify(faqs, null, 2));
+        return interaction.reply(`✅ Added FAQ: Q: "${question}" | A: "${answer}"`);
 
-      return interaction.reply({ content: `✅ Added FAQ: "${question}"`, ephemeral: true });
-    }
+      case 'remove':
+        const index = interaction.options.getInteger('index') - 1;
+        if (index < 0 || index >= faqs.length)
+          return interaction.reply('❌ Invalid index.');
+        const removed = faqs.splice(index, 1)[0];
+        fs.writeFileSync(faqFile, JSON.stringify(faqs, null, 2));
+        return interaction.reply(`✅ Removed FAQ: Q: "${removed.question}"`);
 
-    if (subcommand === 'remove') {
-      const index = interaction.options.getInteger('index') - 1;
-      if (index < 0 || index >= faqs.length) {
-        return interaction.reply({ content: '❌ Invalid FAQ index.', ephemeral: true });
-      }
-
-      const removed = faqs.splice(index, 1)[0];
-      fs.writeFileSync(faqFile, JSON.stringify(faqs, null, 2));
-
-      return interaction.reply({ content: `✅ Removed FAQ: "${removed.question}"`, ephemeral: true });
-    }
-
-    if (subcommand === 'search') {
-      const term = interaction.options.getString('term').toLowerCase();
-      const results = faqs.filter(f => f.question.toLowerCase().includes(term) || f.answer.toLowerCase().includes(term));
-
-      if (results.length === 0) {
-        return interaction.reply({ content: `❌ No FAQs found for "${term}".`, ephemeral: true });
-      }
-
-      const formatted = results.map((f, i) => `**${i + 1}.** Q: ${f.question}\nA: ${f.answer}`).join('\n\n');
-      return interaction.reply({ content: formatted, ephemeral: false });
+      case 'search':
+        const term = interaction.options.getString('term').toLowerCase();
+        const results = faqs.filter(f => f.question.toLowerCase().includes(term) || f.answer.toLowerCase().includes(term));
+        if (!results.length) return interaction.reply('❌ No matches found.');
+        return interaction.reply(results.map(f => `Q: ${f.question} | A: ${f.answer}`).join('\n'));
     }
   }
 };

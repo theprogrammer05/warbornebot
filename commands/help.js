@@ -6,8 +6,8 @@ export default {
 📌 **Bot Commands Overview**
 
 **1️⃣ Schedule Commands**
-• /season-start date:YYYY-MM-DD → View the schedule for a specific date.
-• /season-start date:YYYY-MM-DD add_event:"Event Name" → Add or update an event.
+• /season-event date:YYYY-MM-DD → View the schedule for a specific date.
+• /season-event date:YYYY-MM-DD add_event:"Event Name" → Add or update an event.
 
 **2️⃣ FAQ Commands**
 • /faq → Display all FAQ items.
@@ -29,7 +29,7 @@ export default {
 • /flow-diagram → View a detailed diagram of the bot’s structure, data flow, and environment variables.
 
 💡 **Tips**
-• Admin-only commands: /faq-add, /faq-remove, /season-start (with add_event)
+• Admin-only commands: /faq-add, /faq-remove, /season-event (with add_event)
 • JSON files store all dynamic data: schedule.json and faq.json
 • Example usage is provided in each command’s description for easy reference.
 `;
