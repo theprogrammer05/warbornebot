@@ -1,62 +1,57 @@
 export default {
   name: 'price',
-  description: 'Calculates Solarbite break even value from input',
+  description: 'Calculates Solarbite break-even value from input.',
   async execute(interaction) {
     const userInput = interaction.options.getString('numbers');
+
+    const helpText =
+      '❌ Invalid input.\n' +
+      'Format: `equipStarfallCost / starfallChestCost / solarbiteStarfallChestCost` (or spaces)\n' +
+      'Shorthand allowed: k = 1k, m = 1M.\n' +
+      'Examples: `5m 340k 30` or `5000000/340000/30`';
+
     if (!userInput) {
-      return interaction.reply({
-        content:
-          '❌ You must provide numbers.\n' +
-          'Format: `equipStarfallCost / starfallChestCost / solarbiteStarfallChestCost` (or spaces)\n' +
-          'Shorthand allowed: k = 1k, m = 1M. Examples: `5m 340k 30` or `5000000/340000/30`',
-        ephemeral: true,
-      });
+      return interaction.reply({ content: helpText, ephemeral: true });
     }
 
-    // Normalize: treat spaces as "/" and remove commas
+    // Normalize input
     const cleanedInput = userInput.replace(/\s+/g, '/').replace(/,/g, '');
     const parts = cleanedInput.split('/').map(p => p.trim().toLowerCase());
 
     if (parts.length !== 3) {
-      return interaction.reply({
-        content:
-          '❌ Invalid input count.\n' +
-          'Format: `equipStarfallCost / starfallChestCost / solarbiteStarfallChestCost` (or spaces)\n' +
-          'Shorthand allowed: k = 1k, m = 1M. Examples: `5m 340k 30` or `5000000/340000/30`',
-        ephemeral: true,
-      });
+      return interaction.reply({ content: helpText, ephemeral: true });
     }
 
-    const parse = s => {
+    // Parser with shorthand support (k = thousand, m = million)
+    const parseValue = s => {
       if (s.endsWith('k')) return parseFloat(s.slice(0, -1)) * 1_000;
       if (s.endsWith('m')) return parseFloat(s.slice(0, -1)) * 1_000_000;
       return parseFloat(s);
     };
 
-    const equipStarfallCost = parse(parts[0]);
-    const starfallChestCost = parse(parts[1]);
-    const solarbiteStarfallChestCost = parse(parts[2]);
+    const [equipStarfallCost, starfallChestCost, solarbiteStarfallChestCost] = parts.map(parseValue);
 
-    if ([equipStarfallCost, starfallChestCost, solarbiteStarfallChestCost].some(isNaN) || starfallChest === 0) {
+    if ([equipStarfallCost, starfallChestCost, solarbiteStarfallChestCost].some(isNaN) || starfallChestCost === 0) {
       return interaction.reply({
-        content:
-          '❌ Values must be numbers and chest size cannot be zero. Example: `5m 340k 30`',
+        content: '❌ Values must be valid numbers, and chest cost cannot be zero.\nExample: `5m 340k 30`',
         ephemeral: true,
       });
     }
 
-    // Correct formula:
+    // Formula
     const trueValue = solarbiteStarfallChestCost * (equipStarfallCost / starfallChestCost);
-    const afterMarket = trueValue / 0.94;
+    const marketValue = trueValue / 0.94;
 
-    const formattedTrue = Number(trueValue).toLocaleString(undefined, { maximumFractionDigits: 2 });
-    const formattedAfter = Number(afterMarket).toLocaleString(undefined, { maximumFractionDigits: 2 });
+    // Format numbers
+    const formattedTrue = trueValue.toLocaleString(undefined, { maximumFractionDigits: 2 });
+    const formattedMarket = marketValue.toLocaleString(undefined, { maximumFractionDigits: 2 });
 
+    // Reply
     await interaction.reply({
       content:
-        `🌟 Solarbite Break Even Value for \`${userInput}\`:\n` +
-        `• True Value: **${formattedTrue}**\n` +
-        `• Market Value (6%~): **${formattedAfter}**`
+        `🌟 **Solarbite Break-Even Value** for \`${userInput}\`:\n\n` +
+        `• **True Value:** ${formattedTrue}\n` +
+        `• **Market Value (after 6% cut):** ${formattedMarket}`,
     });
-  }
+  },
 };
