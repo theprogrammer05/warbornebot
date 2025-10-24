@@ -12,52 +12,38 @@ if (!DISCORD_TOKEN || !CLIENT_ID || !GUILD_ID) {
   process.exit(1);
 }
 
-// Load commands dynamically
+// Load commands
 const commandsPath = path.join(process.cwd(), 'commands');
-const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
+const commandFiles = fs.readdirSync(commandsPath).filter(f => f.endsWith('.js'));
 const commands = [];
 
 for (const file of commandFiles) {
-  const command = await import(`./commands/${file}`);
-  if (!command.default?.name || !command.default?.description) continue;
-  commands.push(command.default);
+  const cmd = await import(`./commands/${file}`);
+  if (!cmd.default?.name || !cmd.default?.description) continue;
+  commands.push(cmd.default);
 }
 
-// Register commands
+// Register with Discord
 const rest = new REST({ version: '10' }).setToken(DISCORD_TOKEN);
 
 (async () => {
   try {
-    const formattedCommands = commands.map(cmd => {
-      if (cmd.subcommands) {
-        return {
-          name: cmd.name,
-          description: cmd.description,
-          options: cmd.subcommands
-        };
-      }
-      return cmd;
-    });
-
-    await rest.put(Routes.applicationGuildCommands(CLIENT_ID, GUILD_ID), {
-      body: formattedCommands
-    });
-
+    const formatted = commands.map(cmd => cmd.subcommands ? { name: cmd.name, description: cmd.description, options: cmd.subcommands } : cmd);
+    await rest.put(Routes.applicationGuildCommands(CLIENT_ID, GUILD_ID), { body: formatted });
     console.log('✅ Commands registered.');
   } catch (err) {
     console.error('❌ Error registering commands:', err);
   }
 })();
 
-// Handle command interactions
+// Handle interactions
 client.on('interactionCreate', async interaction => {
   if (!interaction.isChatInputCommand()) return;
-
-  const command = commands.find(c => c.name === interaction.commandName);
-  if (!command) return;
+  const cmd = commands.find(c => c.name === interaction.commandName);
+  if (!cmd) return;
 
   try {
-    await command.execute(interaction);
+    await cmd.execute(interaction);
   } catch (err) {
     console.error(err);
     await interaction.reply({ content: '❌ Error executing command.', ephemeral: true });

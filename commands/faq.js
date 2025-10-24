@@ -1,73 +1,57 @@
 import fs from 'fs';
 import path from 'path';
 
-const faqFile = path.join(process.cwd(), 'faq.json');
-
 export default {
   name: 'faq',
-  description: 'Manage or view FAQs',
-  // Declare your subcommands here
+  description: 'Manage FAQs dynamically. Use subcommands: list, add, remove.',
   subcommands: [
-    { name: 'list', description: 'List all FAQs' },
+    {
+      name: 'list',
+      description: 'List all FAQs.'
+    },
     {
       name: 'add',
-      description: 'Add a new FAQ',
+      description: 'Add a new FAQ.',
       options: [
-        { name: 'question', type: 3, description: 'FAQ question', required: true },
-        { name: 'answer', type: 3, description: 'FAQ answer', required: true }
+        { name: 'question', type: 3, description: 'The FAQ question', required: true },
+        { name: 'answer', type: 3, description: 'The FAQ answer', required: true }
       ]
     },
     {
       name: 'remove',
-      description: 'Remove an FAQ by index',
+      description: 'Remove an FAQ by its number.',
       options: [
-        { name: 'index', type: 4, description: 'Index of FAQ to remove', required: true }
-      ]
-    },
-    {
-      name: 'search',
-      description: 'Search FAQs',
-      options: [
-        { name: 'term', type: 3, description: 'Search term', required: true }
+        { name: 'number', type: 4, description: 'The FAQ number to remove', required: true }
       ]
     }
   ],
-
   async execute(interaction) {
+    const faqFile = path.join(process.cwd(), 'faq.json');
+    if (!fs.existsSync(faqFile)) fs.writeFileSync(faqFile, JSON.stringify([]));
+
+    const faqs = JSON.parse(fs.readFileSync(faqFile, 'utf8'));
     const subcommand = interaction.options.getSubcommand();
 
-    let faqs = [];
-    if (fs.existsSync(faqFile)) {
-      faqs = JSON.parse(fs.readFileSync(faqFile, 'utf8'));
+    if (subcommand === 'list') {
+      if (!faqs.length) return interaction.reply({ content: '📭 No FAQs available.', ephemeral: true });
+      const list = faqs.map((f, i) => `${i + 1}. **${f.question}**: ${f.answer}`).join('\n');
+      return interaction.reply({ content: `📖 **FAQs:**\n${list}`, ephemeral: false });
     }
 
-    switch (subcommand) {
-      case 'list':
-        if (!faqs.length) return interaction.reply('❌ No FAQs yet.');
-        return interaction.reply(
-          faqs.map((f, i) => `**${i + 1}.** Q: ${f.question} | A: ${f.answer}`).join('\n')
-        );
+    if (subcommand === 'add') {
+      const question = interaction.options.getString('question');
+      const answer = interaction.options.getString('answer');
+      faqs.push({ question, answer });
+      fs.writeFileSync(faqFile, JSON.stringify(faqs, null, 2));
+      return interaction.reply({ content: `✅ FAQ added:\n**${question}**: ${answer}` });
+    }
 
-      case 'add':
-        const question = interaction.options.getString('question');
-        const answer = interaction.options.getString('answer');
-        faqs.push({ question, answer });
-        fs.writeFileSync(faqFile, JSON.stringify(faqs, null, 2));
-        return interaction.reply(`✅ Added FAQ: Q: "${question}" | A: "${answer}"`);
-
-      case 'remove':
-        const index = interaction.options.getInteger('index') - 1;
-        if (index < 0 || index >= faqs.length)
-          return interaction.reply('❌ Invalid index.');
-        const removed = faqs.splice(index, 1)[0];
-        fs.writeFileSync(faqFile, JSON.stringify(faqs, null, 2));
-        return interaction.reply(`✅ Removed FAQ: Q: "${removed.question}"`);
-
-      case 'search':
-        const term = interaction.options.getString('term').toLowerCase();
-        const results = faqs.filter(f => f.question.toLowerCase().includes(term) || f.answer.toLowerCase().includes(term));
-        if (!results.length) return interaction.reply('❌ No matches found.');
-        return interaction.reply(results.map(f => `Q: ${f.question} | A: ${f.answer}`).join('\n'));
+    if (subcommand === 'remove') {
+      const number = interaction.options.getInteger('number');
+      if (number < 1 || number > faqs.length) return interaction.reply({ content: '❌ Invalid FAQ number.', ephemeral: true });
+      const removed = faqs.splice(number - 1, 1)[0];
+      fs.writeFileSync(faqFile, JSON.stringify(faqs, null, 2));
+      return interaction.reply({ content: `🗑️ Removed FAQ:\n**${removed.question}**: ${removed.answer}` });
     }
   }
 };
