@@ -1,9 +1,5 @@
 [
   {
-    "question": "What do I do?",
-    "answer": "Ask Kyle."
-  },
-  {
     "question": "How do I add a  season event?",
     "answer": "Use the /season-event command with a date to set the season event."
   },
