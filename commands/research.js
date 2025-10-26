@@ -52,8 +52,9 @@ export default {
     // Handle 'all' option
     if (researchType === 'all') {
       const embed = new EmbedBuilder()
-        .setTitle('🔬 All Research Diagrams')
-        .setColor('#0099ff');
+        .setTitle('🔬 Research Overview')
+        .setDescription('📊 **All Available Research Categories**')
+        .setColor('#7289da');
 
       // Add image for each research type
       const imageUrls = {
@@ -67,14 +68,13 @@ export default {
         if (research) {
           embed.addFields({
             name: `🔹 ${research.name}`,
-            value: `[View Diagram](${url})`,
+            value: `📊 [View Diagram](${url})\n📝 Use \`/wb-research type:${type}\` for details`,
             inline: true
           });
         }
       }
 
-      // Add a note about the images
-      embed.setFooter({ text: 'Click the links above to view each research diagram' });
+      embed.setFooter({ text: '💡 Select a specific research type to see tier details' });
       return interaction.reply({ embeds: [embed] });
     }
 
@@ -88,9 +88,9 @@ export default {
     }
 
       const embed = new EmbedBuilder()
-        .setTitle(`🔍 ${research.name} Research`)
-        .setDescription(research.description)
-        .setColor('#0099ff');
+        .setTitle(`🔬 ${research.name} Research`)
+        .setDescription(`📊 **${research.description}**`)
+        .setColor('#7289da');
 
       // Format the tiers based on the research type
       if (researchType === 'driftmark') {
@@ -104,7 +104,7 @@ export default {
         });
         
         table += '```';
-        embed.addFields({ name: 'Tier Values', value: table });
+        embed.addFields({ name: '📈 Tier Requirements', value: table });
       } else {
         // For Drifter and Equipment, show a simpler table with just tier and exergy
         let table = '```\n';
@@ -115,8 +115,10 @@ export default {
           table += `${tier.tier.padEnd(6)}| ${formatNumber(tier.exergy)}\n`;
         });
         table += '```';
-        embed.addFields({ name: 'Tier Values', value: table });
+        embed.addFields({ name: '📈 Tier Requirements', value: table });
       }
+
+      embed.setFooter({ text: '💡 Plan your research upgrades wisely!' });
 
       return interaction.reply({ embeds: [embed] });
   }

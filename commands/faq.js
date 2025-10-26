@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
-import fetch from 'node-fetch';
 import Discord from 'discord.js';
+import { updateGitHubFile } from '../utils/github.js';
 
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType } = Discord;
 
@@ -10,91 +10,6 @@ const faqFile = path.join(process.cwd(), 'faq.json');
 // Ensure faq.json exists locally
 if (!fs.existsSync(faqFile)) {
   fs.writeFileSync(faqFile, JSON.stringify([]));
-}
-
-// GitHub info from environment
-const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
-const GITHUB_REPO = process.env.GITHUB_REPO; // format: "username/repo"
-const GITHUB_USER = process.env.GITHUB_USER;
-const BRANCH = process.env.BRANCH || 'main';
-
-// Quick Railway env debug (temporary)
-console.log('Railway env vars:');
-console.log('GITHUB_REPO:', process.env.GITHUB_REPO);
-console.log('GITHUB_TOKEN set?', !!process.env.GITHUB_TOKEN);
-console.log('GITHUB_USER:', process.env.GITHUB_USER);
-
-/**
- * Update GitHub file with FAQs (creates if missing)
- * Includes detailed debug logs
- */
-async function updateGitHub(faqs) {
-  if (!GITHUB_REPO || !GITHUB_TOKEN || !GITHUB_USER) {
-    console.error('❌ Missing one of GITHUB_REPO, GITHUB_TOKEN, or GITHUB_USER');
-    return;
-  }
-
-  let sha;
-
-  try {
-    const getUrl = `https://api.github.com/repos/${GITHUB_REPO}/contents/faq.json?ref=${BRANCH}`;
-    console.log('GET URL:', getUrl);
-
-    const getRes = await fetch(getUrl, {
-      headers: {
-        Authorization: `token ${GITHUB_TOKEN}`,
-        'User-Agent': GITHUB_USER,
-      },
-    });
-
-    console.log('GET status:', getRes.status);
-
-    if (getRes.ok) {
-      const fileData = await getRes.json();
-      sha = fileData.sha;
-      console.log('Existing file SHA:', sha);
-    } else if (getRes.status === 404) {
-      console.log('File does not exist in repo, will create new file.');
-    } else {
-      const errText = await getRes.text();
-      console.error('GitHub GET failed:', getRes.status, errText);
-      return;
-    }
-  } catch (err) {
-    console.error('GitHub GET request failed:', err);
-    return;
-  }
-
-  try {
-    const putUrl = `https://api.github.com/repos/${GITHUB_REPO}/contents/faq.json`;
-    console.log('PUT URL:', putUrl);
-
-    const putRes = await fetch(putUrl, {
-      method: 'PUT',
-      headers: {
-        Authorization: `token ${GITHUB_TOKEN}`,
-        'User-Agent': GITHUB_USER,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        message: 'Update FAQ via Discord bot',
-        content: Buffer.from(JSON.stringify(faqs, null, 2)).toString('base64'),
-        sha, // undefined if creating new file
-        branch: BRANCH,
-      }),
-    });
-
-    console.log('PUT status:', putRes.status);
-
-    if (!putRes.ok) {
-      const errText = await putRes.text();
-      console.error('GitHub PUT failed:', errText);
-    } else {
-      console.log('✅ FAQ pushed to GitHub successfully.');
-    }
-  } catch (err) {
-    console.error('GitHub PUT request failed:', err);
-  }
 }
 
 // Helper to paginate FAQs
@@ -136,14 +51,24 @@ export default {
     
     if (!faqs.length) return interaction.reply({ content: '❌ No FAQs found.', ephemeral: true });
 
-    const pageSize = 5;
+    const pageSize = 15;
     let page = 0;
 
     const getContent = (page) => {
       const faqList = paginate(faqs, pageSize, page)
-        .map((faq, i) => `**${i + 1 + page * pageSize}.** ${faq.question} — ${faq.answer}`)
-        .join('\n');
-      return `📚 **FAQ List** (Page ${page + 1}/${Math.ceil(faqs.length / pageSize)})\n\n${faqList}`;
+        .map((faq, i) => 
+          `**${i + 1 + page * pageSize}.** 💬 **${faq.question}**\n` +
+          `   ➡️ ${faq.answer}`
+        )
+        .join('\n\n');
+      return (
+        `📚 **Frequently Asked Questions**\n` +
+        `━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
+        `Page **${page + 1}** of **${Math.ceil(faqs.length / pageSize)}** • Total: **${faqs.length}** FAQs\n\n` +
+        `${faqList}\n\n` +
+        `━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
+        `💡 *Use \`/wb-faq add\` to contribute!*`
+      );
     };
 
     const row = new ActionRowBuilder().addComponents(
@@ -207,11 +132,16 @@ export default {
 
       faqs.push({ question, answer });
       fs.writeFileSync(faqFile, JSON.stringify(faqs, null, 2));
-      await updateGitHub(faqs);
+      await updateGitHubFile('faq.json', faqs, 'Add FAQ via Discord bot');
 
       return interaction.reply({
-        content: `✅ FAQ added:\n**Q:** ${question}\n**A:** ${answer}`,
-        ephemeral: true,
+        content: 
+          `✅ **FAQ Added Successfully!**\n` +
+          `━━━━━━━━━━━━━━━━━━━━\n` +
+          `💬 **Question:** ${question}\n` +
+          `➡️ **Answer:** ${answer}\n` +
+          `🔢 **FAQ #${faqs.length}**`,
+        ephemeral: false,
       });
     }
 
@@ -222,11 +152,15 @@ export default {
 
       const removed = faqs.splice(number - 1, 1)[0];
       fs.writeFileSync(faqFile, JSON.stringify(faqs, null, 2));
-      await updateGitHub(faqs);
+      await updateGitHubFile('faq.json', faqs, 'Remove FAQ via Discord bot');
 
       return interaction.reply({
-        content: `✅ Removed FAQ:\n**Q:** ${removed.question}\n**A:** ${removed.answer}`,
-        ephemeral: true,
+        content: 
+          `✅ **FAQ Removed Successfully!**\n` +
+          `━━━━━━━━━━━━━━━━━━━━━━━\n` +
+          `💬 **Question:** ${removed.question}\n` +
+          `➡️ **Answer:** ${removed.answer}`,
+        ephemeral: false,
       });
     }
   },

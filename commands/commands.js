@@ -35,16 +35,22 @@ export default {
         });
       }
 
-      // Format the command list
+      // Format the command list with better styling
       const commandList = commandsInfo
         .sort((a, b) => a.name.localeCompare(b.name))
-        .map(cmd => `• **/${cmd.name}**: ${cmd.description}`)
+        .map(cmd => `\`/${cmd.name}\` — ${cmd.description}`)
         .join('\n');
 
       await interaction.reply({
-        content: `📜 **Available Commands:**\n${commandList}`,
+        content: 
+          `🤖 **WarborneBot Commands**\n` +
+          `━━━━━━━━━━━━━━━━━━━━━━\n` +
+          `${commandList}\n` +
+          `━━━━━━━━━━━━━━━━━━━━━━\n` +
+          `💡 *Tip: Use \`/\` to see all commands with autocomplete!*`,
         ephemeral: true
       });
+    
     } catch (error) {
       console.error('Error in wb-commands:', error);
       await interaction.reply({

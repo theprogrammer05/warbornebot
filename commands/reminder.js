@@ -60,7 +60,7 @@ export default {
     // Validate that at least some time was specified
     if (totalMs === 0) {
       return interaction.reply({
-        content: '❌ Please specify at least some time for the reminder!',
+        content: '❌ **Invalid Time**\n⏱️ Please specify at least some time for the reminder!',
         ephemeral: true
       });
     }
@@ -68,7 +68,7 @@ export default {
     // Validate maximum time (30 days)
     if (totalMs > 30 * 24 * 60 * 60 * 1000) {
       return interaction.reply({
-        content: '❌ Maximum reminder time is 30 days',
+        content: '❌ **Time Limit Exceeded**\n⏱️ Maximum reminder time is **30 days**',
         ephemeral: true
       });
     }
@@ -91,13 +91,14 @@ export default {
     
     // Create an embed to show the reminder details
     const embed = new EmbedBuilder()
-      .setColor('#3498db')
-      .setTitle('⏰ Reminder Set')
-      .setDescription(`I'll remind you ${formattedTime} about:`)
+      .setColor('#00d4ff')
+      .setTitle('⏰ Reminder Set Successfully!')
+      .setDescription(`📢 **I'll remind you about:**\n> ${description}`)
       .addFields(
-        { name: 'Reminder', value: description },
-        { name: 'Time until reminder', value: timeString }
+        { name: '📅 Reminder Time', value: formattedTime, inline: false },
+        { name: '⏱️ Time Until Reminder', value: `🕒 ${timeString}`, inline: false }
       )
+      .setFooter({ text: 'You will be mentioned when the time is up!' })
       .setTimestamp(triggerTime);
     
     // Add a button to cancel the reminder
@@ -110,15 +111,23 @@ export default {
     
     // Send the initial response
     await interaction.reply({
-      content: `⏰ I'll remind you in ${timeString} about: ${description}`,
-      ephemeral: true
+      content: 
+        `✅ **Reminder Created!**\n` +
+        `━━━━━━━━━━━━━━━━━━━━\n` +
+        `⏰ **In:** ${timeString}\n` +
+        `📢 **For:** ${description}`,
+      ephemeral: false
     });
     
     // Set the timeout
     const timeout = setTimeout(async () => {
       try {
         await interaction.followUp({
-          content: `⏰ <@${interaction.user.id}>, Drifter, this is your reminder for: ${description}`,
+          content: 
+            `🔔 **REMINDER** 🔔\n` +
+            `━━━━━━━━━━━━━━━━━━━━\n` +
+            `<@${interaction.user.id}> Drifter, your reminder:\n` +
+            `📢 **${description}**`,
           ephemeral: false
         });
       } catch (error) {

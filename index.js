@@ -105,8 +105,8 @@ client.once('ready', async () => {
 
       const today = daysOfWeek[todayIndex];
       const tomorrow = daysOfWeek[tomorrowIndex];
-      const todayEvent = schedule[today];
-      const tomorrowEvent = schedule[tomorrow];
+      const todayEvents = schedule[today] || [];
+      const tomorrowEvents = schedule[tomorrow] || [];
 
       const channel = await client.channels.fetch(ANNOUNCE_CHANNEL_ID).catch(console.error);
       if (!channel) {
@@ -114,10 +114,36 @@ client.once('ready', async () => {
         return;
       }
 
-      let message = `📅 **${today}'s Event:** ${todayEvent ?? 'No event scheduled.'}`;
-      if (tomorrowEvent) {
-        message += `\n➡️ **Next Event (${tomorrow}):** ${tomorrowEvent}`;
+      // Day emoji mapping
+      const dayEmojis = {
+        'Sunday': '🌞',
+        'Monday': '💼',
+        'Tuesday': '⚔️',
+        'Wednesday': '🎓',
+        'Thursday': '⚡',
+        'Friday': '🎉',
+        'Saturday': '🎖️'
+      };
+
+      // Format today's events
+      let message = 
+        `📅 **Daily Event Schedule**\n` +
+        `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
+        `${dayEmojis[today] || '📅'} **${today}'s Events:**\n`;
+      
+      if (todayEvents.length === 0) {
+        message += '   • _No events scheduled_';
+      } else {
+        message += todayEvents.map((event, i) => `   **${i + 1}.** ${event}`).join('\n');
       }
+
+      // Format tomorrow's events
+      if (tomorrowEvents.length > 0) {
+        message += `\n\n${dayEmojis[tomorrow] || '📅'} **Tomorrow (${tomorrow}):**\n`;
+        message += tomorrowEvents.map((event, i) => `   **${i + 1}.** ${event}`).join('\n');
+      }
+
+      message += `\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n💡 *Use \`/wb-schedule view\` to see the full week!*`;
 
       await channel.send(message);
       console.log(`✅ Posted schedule for ${today} (CST)`);
