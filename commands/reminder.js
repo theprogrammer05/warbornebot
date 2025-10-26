@@ -214,9 +214,8 @@ export default {
       content: 
         `✅ **Reminder Created!**\n` +
         `━━━━━━━━━━━━━━━━━━━━\n` +
-        `⏰ **In:** ${timeString}\n` +
-        `👤 **Will mention:** ${displayMention}\n` +
-        `📢 **For:** ${description}`
+        `⏰ **Timer:** ${timeString}\n` +
+        `📢 **Reminder:** ${description}`
     });
     
     console.log(`✅ Saved and scheduled reminder for ${interaction.user.tag} (mentioning ${mentionString}) in ${timeString}: ${description}`);
