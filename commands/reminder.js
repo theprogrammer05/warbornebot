@@ -162,16 +162,16 @@ export default {
       .setFooter({ text: 'You will be mentioned when the time is up!' })
       .setTimestamp(triggerTime);
     
+    // Create reminder ID
+    const reminderId = `${interaction.user.id}_${Date.now()}`;
+    
     // Add a button to cancel the reminder
     const row = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
-        .setCustomId(`cancel_reminder_${interaction.user.id}_${Date.now()}`)
+        .setCustomId(`cancel_reminder_${reminderId}`)
         .setLabel('Cancel Reminder')
         .setStyle(ButtonStyle.Danger)
     );
-    
-    // Create reminder ID
-    const reminderId = `${interaction.user.id}_${Date.now()}`;
     
     // Save reminder to JSON file
     const reminders = loadReminders();

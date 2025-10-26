@@ -76,6 +76,58 @@ client.on('interactionCreate', async interaction => {
   }
 });
 
+// Handle button interactions (e.g., cancel reminder)
+client.on('interactionCreate', async (interaction) => {
+  if (!interaction.isButton()) return;
+  
+  // Handle cancel reminder button
+  if (interaction.customId.startsWith('cancel_reminder_')) {
+    const reminderId = interaction.customId.replace('cancel_reminder_', '');
+    
+    try {
+      const { removeReminder, loadReminders } = await import('./utils/reminderManager.js');
+      
+      // Check if reminder exists
+      const reminders = loadReminders();
+      const reminder = reminders.find(r => r.id === reminderId);
+      
+      if (!reminder) {
+        return interaction.reply({
+          content: '❌ This reminder has already been cancelled or has fired.',
+          flags: MessageFlags.Ephemeral
+        });
+      }
+      
+      // Check if user owns this reminder
+      if (reminder.userId !== interaction.user.id) {
+        return interaction.reply({
+          content: '❌ You can only cancel your own reminders!',
+          flags: MessageFlags.Ephemeral
+        });
+      }
+      
+      // Remove the reminder
+      await removeReminder(reminderId);
+      
+      await interaction.reply({
+        content: 
+          `✅ **Reminder Cancelled!**\n` +
+          `━━━━━━━━━━━━━━━━━━━━\n` +
+          `📢 **Cancelled:** ${reminder.description}`,
+        flags: MessageFlags.Ephemeral
+      });
+      
+      console.log(`🗑️ User ${interaction.user.tag} cancelled reminder ${reminderId}`);
+    } catch (error) {
+      console.error('Error cancelling reminder:', error);
+      await interaction.reply({
+        content: '❌ An error occurred while cancelling the reminder.',
+        flags: MessageFlags.Ephemeral
+      });
+    }
+  }
+});
+
 // Automatic daily schedule posting (CST-based)
 client.once('clientReady', async () => {
   try {
