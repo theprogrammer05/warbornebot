@@ -63,14 +63,21 @@ export default {
       maximumFractionDigits: 2,
     });
 
-    await interaction.reply({
-      content:
-        `🌟 **Solarbite Break-Even Value**\n` +
-        `• Equipment Cost: ${equipStarfallCost.toLocaleString()} Starfall\n` +
-        `• Chest Cost: ${starfallChestCost.toLocaleString()} Starfall\n` +
-        `• Solarbite Cost: ${solarbiteStarfallChestCost} Solarbite\n\n` +
-        `• **True Value:** ${formattedTrue} Solarbite\n` +
-        `• **Market Value (after 6% cut):** ${formattedMarket} Solarbite`,
-    });
+      await interaction.reply({
+        content:
+          `🌟 **Solarbite Break-Even Value**\n` +
+          `• Equipment Cost: ${equipStarfallCost.toLocaleString()} Starfall\n` +
+          `• Chest Cost: ${starfallChestCost.toLocaleString()} Starfall\n` +
+          `• Solarbite Cost: ${solarbiteStarfallChestCost} Solarbite\n\n` +
+          `• **True Value:** ${formattedTrue} Solarbite\n` +
+          `• **Market Value (after 6% cut):** ${formattedMarket} Solarbite`,
+      });
+    } catch (error) {
+      console.error('Error in price calculation:', error);
+      await interaction.reply({
+        content: error.message || '❌ An error occurred while calculating the price',
+        ephemeral: true
+      });
+    }
   },
 };

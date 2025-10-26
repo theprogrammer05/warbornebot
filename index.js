@@ -46,27 +46,9 @@ const rest = new REST({ version: '10' }).setToken(DISCORD_TOKEN);
   try {
     console.log('Started refreshing application (/) commands.');
 
-    const formattedCommands = commands.map(cmd => {
-      if (cmd.name === 'price') {
-        return {
-          ...cmd,
-          options: [
-            {
-              name: 'numbers',
-              type: 3, // STRING
-              description:
-                'Starfall Token Cost For Equipment, Starfall Token Chest Cost, Solarbite Cost (for Chest)',
-              required: true
-            }
-          ]
-        };
-      }
-      return cmd;
-    });
-
     await rest.put(
       Routes.applicationGuildCommands(CLIENT_ID, GUILD_ID),
-      { body: formattedCommands }
+      { body: commands }
     );
 
     console.log('✅ Successfully registered commands.');
