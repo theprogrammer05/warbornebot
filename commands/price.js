@@ -1,47 +1,56 @@
 export default {
   name: 'wb-price',
-  description: 'Calculates Solarbite break-even value from input.',
+  description: 'Calculate the break-even Solarbite value for equipment',
+  options: [
+    {
+      name: 'equip_cost',
+      type: 3, // STRING
+      description: 'Equipment Starfall cost (e.g., 5m, 5000000)',
+      required: true
+    },
+    {
+      name: 'chest_cost',
+      type: 3, // STRING
+      description: 'Starfall Chest cost (e.g., 340k, 340000)',
+      required: true
+    },
+    {
+      name: 'solarbite_cost',
+      type: 3, // STRING
+      description: 'Solarbite Starfall Chest cost (e.g., 30)',
+      required: true
+    }
+  ],
   async execute(interaction) {
-    const userInput = interaction.options.getString('numbers');
-    const help =
-      '❌ Invalid input.\n' +
-      'Format: `equipStarfallCost / starfallChestCost / solarbiteStarfallChestCost` (or spaces)\n' +
-      'Shorthand allowed: k = 1k, m = 1M. Examples: `5m 340k 30` or `5000000/340000/30`';
+    // Get input values
+    const equipCostInput = interaction.options.getString('equip_cost');
+    const chestCostInput = interaction.options.getString('chest_cost');
+    const solarbiteCostInput = interaction.options.getString('solarbite_cost');
 
-    if (!userInput)
-      return interaction.reply({ content: help, ephemeral: true });
+    // Helper function to parse input values
+    const parseInput = (input, name) => {
+      const value = input.trim().toLowerCase();
+      const num = value.endsWith('k')
+        ? parseFloat(value) * 1_000
+        : value.endsWith('m')
+        ? parseFloat(value) * 1_000_000
+        : parseFloat(value);
+      
+      if (isNaN(num) || num <= 0) {
+        throw new Error(`❌ Invalid ${name}. Must be a positive number. Examples: 5m, 340k, 30`);
+      }
+      return num;
+    };
 
-    // normalize input
-    const parts = userInput
-      .replace(/\s+/g, '/')
-      .replace(/,/g, '')
-      .split('/')
-      .map(p => p.trim().toLowerCase());
+    try {
+      // Parse all inputs
+      const equipStarfallCost = parseInput(equipCostInput, 'equipment cost');
+      const starfallChestCost = parseInput(chestCostInput, 'chest cost');
+      const solarbiteStarfallChestCost = parseInput(solarbiteCostInput, 'solarbite cost');
 
-    if (parts.length !== 3)
-      return interaction.reply({ content: help, ephemeral: true });
-
-    const parse = s =>
-      s.endsWith('k')
-        ? parseFloat(s) * 1_000
-        : s.endsWith('m')
-        ? parseFloat(s) * 1_000_000
-        : parseFloat(s);
-
-    const [equipStarfallCost, starfallChestCost, solarbiteStarfallChestCost] =
-      parts.map(parse);
-
-    if (
-      [equipStarfallCost, starfallChestCost, solarbiteStarfallChestCost].some(
-        isNaN
-      ) ||
-      starfallChestCost === 0
-    )
-      return interaction.reply({
-        content:
-          '❌ Values must be valid numbers, and chest cost cannot be zero.\nExample: `5m 340k 30`',
-        ephemeral: true,
-      });
+      if (starfallChestCost === 0) {
+        throw new Error('❌ Starfall Chest cost cannot be zero');
+      }
 
     const trueValue =
       solarbiteStarfallChestCost * (equipStarfallCost / starfallChestCost);

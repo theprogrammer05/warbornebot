@@ -27,8 +27,14 @@ export default {
     {
       name: 'type',
       type: 3, // STRING
-      description: 'Research type (drifter, driftmark, or equip)',
-      required: false
+      description: 'Select a research type to view',
+      required: true,
+      choices: [
+        { name: 'Drifter Research', value: 'drifter' },
+        { name: 'Driftmark Research', value: 'driftmark' },
+        { name: 'Equipment Research', value: 'equip' },
+        { name: 'View All Diagrams', value: 'all' }
+      ]
     }
   ],
   
@@ -43,15 +49,43 @@ export default {
 
     const researchType = interaction.options.getString('type')?.toLowerCase();
 
-    if (researchType) {
-      // Show specific category details
-      const research = researchData[researchType];
-      if (!research) {
-        return interaction.reply({
-          content: '❌ Invalid research type. Available types: drifter, driftmark, equip',
-          ephemeral: true
-        });
+    // Handle 'all' option
+    if (researchType === 'all') {
+      const embed = new EmbedBuilder()
+        .setTitle('🔬 All Research Diagrams')
+        .setColor('#0099ff');
+
+      // Add image for each research type
+      const imageUrls = {
+        drifter: 'https://i.imgur.com/your-drifter-image.png',
+        driftmark: 'https://i.imgur.com/your-driftmark-image.png',
+        equip: 'https://i.imgur.com/your-equip-image.png'
+      };
+
+      for (const [type, url] of Object.entries(imageUrls)) {
+        const research = researchData[type];
+        if (research) {
+          embed.addFields({
+            name: `🔹 ${research.name}`,
+            value: `[View Diagram](${url})`,
+            inline: true
+          });
+        }
       }
+
+      // Add a note about the images
+      embed.setFooter({ text: 'Click the links above to view each research diagram' });
+      return interaction.reply({ embeds: [embed] });
+    }
+
+    // Show specific category details
+    const research = researchData[researchType];
+    if (!research) {
+      return interaction.reply({
+        content: '❌ Invalid research type. Available types: drifter, driftmark, equip, all',
+        ephemeral: true
+      });
+    }
 
       const embed = new EmbedBuilder()
         .setTitle(`🔍 ${research.name} Research`)
@@ -80,33 +114,10 @@ export default {
         research.tiers.forEach(tier => {
           table += `${tier.tier.padEnd(6)}| ${formatNumber(tier.exergy)}\n`;
         });
-        
         table += '```';
         embed.addFields({ name: 'Tier Values', value: table });
       }
 
       return interaction.reply({ embeds: [embed] });
-    } else {
-      // Show all categories
-      const embed = new EmbedBuilder()
-        .setTitle('🔬 Research Categories')
-        .setDescription('Use `/research category:<name>` to view details')
-        .setColor('#0099ff');
-
-      // Add a field for each category
-      Object.entries(researchData).forEach(([key, data]) => {
-        const tierRange = data.tiers.length > 0 
-          ? `Tiers: ${data.tiers[0].tier}-${data.tiers[data.tiers.length - 1].tier}`
-          : 'No tier data';
-          
-        embed.addFields({
-          name: `🔹 ${data.name}`,
-          value: `${data.description}\n${tierRange}`,
-          inline: true
-        });
-      });
-
-      return interaction.reply({ embeds: [embed] });
-    }
   }
 };
