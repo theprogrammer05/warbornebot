@@ -43,7 +43,8 @@ const rest = new REST({ version: '10' }).setToken(DISCORD_TOKEN);
             {
               name: 'numbers',
               type: 3, // STRING
-              description: 'Starfall Token Cost For Equipment, Starfall Token Chest Cost, Solarbite Cost (for Chest)',
+              description:
+                'Starfall Token Cost For Equipment, Starfall Token Chest Cost, Solarbite Cost (for Chest)',
               required: true
             }
           ]
@@ -74,11 +75,14 @@ client.on('interactionCreate', async interaction => {
     await command.execute(interaction);
   } catch (error) {
     console.error(error);
-    await interaction.reply({ content: '❌ There was an error executing this command.', ephemeral: true });
+    await interaction.reply({
+      content: '❌ There was an error executing this command.',
+      ephemeral: true
+    });
   }
 });
 
-// Automatic daily schedule posting
+// Automatic daily schedule posting (CST-based)
 client.once('ready', async () => {
   console.log(`✅ Bot logged in as ${client.user.tag}`);
 
@@ -91,19 +95,63 @@ client.once('ready', async () => {
   const schedule = JSON.parse(fs.readFileSync(scheduleFile, 'utf8'));
   const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
-  // Post today's event immediately
-  const now = new Date();
-  const today = daysOfWeek[now.getDay()];
-  const event = schedule[today];
+  // Helper to convert current UTC time to CST (UTC-6)
+  const getCSTDate = () => {
+    const now = new Date();
+    // get UTC milliseconds, then offset by -6 hours
+    const utcMillis = now.getTime() + now.getTimezoneOffset() * 60000;
+    return new Date(utcMillis - 6 * 60 * 60 * 1000);
+  };
 
-  if (event) {
-    const channel = await client.channels.fetch(ANNOUNCE_CHANNEL_ID).catch(console.error);
-    if (channel) {
-      channel.send(`📅 **${today}'s Event:** ${event}`);
+  // Helper to post today's and tomorrow's events
+  const postDailySchedule = async () => {
+    try {
+      const now = getCSTDate();
+      const todayIndex = now.getDay();
+      const tomorrowIndex = (todayIndex + 1) % 7;
+
+      const today = daysOfWeek[todayIndex];
+      const tomorrow = daysOfWeek[tomorrowIndex];
+      const todayEvent = schedule[today];
+      const tomorrowEvent = schedule[tomorrow];
+
+      const channel = await client.channels.fetch(ANNOUNCE_CHANNEL_ID).catch(console.error);
+      if (!channel) {
+        console.error('❌ Could not find announcement channel.');
+        return;
+      }
+
+      let message = `📅 **${today}'s Event:** ${todayEvent ?? 'No event scheduled.'}`;
+      if (tomorrowEvent) {
+        message += `\n➡️ **Next Event (${tomorrow}):** ${tomorrowEvent}`;
+      }
+
+      await channel.send(message);
+      console.log(`✅ Posted schedule for ${today} (CST)`);
+    } catch (err) {
+      console.error('❌ Error posting schedule:', err);
     }
-  }
+  };
 
-  // Optional: Schedule the next posts at midnight (can be implemented later)
+  // Calculate time until next midnight CST
+  const now = getCSTDate();
+  const nextMidnightCST = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate() + 1,
+    0, 0, 5
+  );
+  const millisUntilMidnight = nextMidnightCST - now;
+
+  console.log(
+    `🕒 Next schedule post in ${Math.round(millisUntilMidnight / 1000 / 60)} minutes (CST).`
+  );
+
+  // Schedule first post at next midnight CST
+  setTimeout(() => {
+    postDailySchedule(); // Run once at midnight CST
+    setInterval(postDailySchedule, 24 * 60 * 60 * 1000); // Then every 24h
+  }, millisUntilMidnight);
 });
 
 client.login(DISCORD_TOKEN).then(() => console.log('✅ Bot logged in successfully.'));
