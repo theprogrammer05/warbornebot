@@ -65,9 +65,12 @@ export default {
 
     await interaction.reply({
       content:
-        `🌟 **Solarbite Break-Even Value** for \`${userInput}\`:\n` +
-        `• **True Value:** ${formattedTrue}\n` +
-        `• **Market Value (after 6% cut):** ${formattedMarket}`,
+        `🌟 **Solarbite Break-Even Value**\n` +
+        `• Equipment Cost: ${equipStarfallCost.toLocaleString()} Starfall\n` +
+        `• Chest Cost: ${starfallChestCost.toLocaleString()} Starfall\n` +
+        `• Solarbite Cost: ${solarbiteStarfallChestCost} Solarbite\n\n` +
+        `• **True Value:** ${formattedTrue} Solarbite\n` +
+        `• **Market Value (after 6% cut):** ${formattedMarket} Solarbite`,
     });
   },
 };

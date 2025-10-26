@@ -1,17 +1,56 @@
+import fs from 'fs';
+import path from 'path';
+
 export default {
   name: 'wb-commands',
   description: 'Shows a list of all bot commands.',
   async execute(interaction) {
-    const commands = interaction.client.commands;
-    if (!commands) return interaction.reply('❌ No commands found.');
+    try {
+      // Get all command files
+      const commandsPath = path.join(process.cwd(), 'commands');
+      const commandFiles = fs.readdirSync(commandsPath)
+        .filter(file => file.endsWith('.js') && file !== 'commands.js');
+      
+      // Import and collect command info
+      const commandsInfo = [];
+      
+      for (const file of commandFiles) {
+        try {
+          const command = await import(`./${file}`);
+          if (command.default && command.default.name && command.default.description) {
+            commandsInfo.push({
+              name: command.default.name,
+              description: command.default.description
+            });
+          }
+        } catch (error) {
+          console.error(`Error loading command ${file}:`, error);
+        }
+      }
 
-    const commandList = commands
-      .map(cmd => `• **${cmd.name}**: ${cmd.description}`)
-      .join('\n');
+      if (commandsInfo.length === 0) {
+        return interaction.reply({
+          content: '❌ No commands found.',
+          ephemeral: true
+        });
+      }
 
-    await interaction.reply({
-      content: `📜 **Available Commands:**\n${commandList}`,
-      ephemeral: true, // only visible to the user
-    });
+      // Format the command list
+      const commandList = commandsInfo
+        .sort((a, b) => a.name.localeCompare(b.name))
+        .map(cmd => `• **/${cmd.name}**: ${cmd.description}`)
+        .join('\n');
+
+      await interaction.reply({
+        content: `📜 **Available Commands:**\n${commandList}`,
+        ephemeral: true
+      });
+    } catch (error) {
+      console.error('Error in wb-commands:', error);
+      await interaction.reply({
+        content: '❌ An error occurred while fetching commands.',
+        ephemeral: true
+      });
+    }
   },
 };
