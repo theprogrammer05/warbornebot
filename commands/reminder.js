@@ -1,4 +1,5 @@
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, MessageFlags } from 'discord.js';
+import { scheduleReminder, loadReminders, saveReminders } from '../utils/reminderManager.js';
 
 export default {
   name: 'wb-reminder',
@@ -40,6 +41,30 @@ export default {
       required: true,
       min_value: 0,
       max_value: 59
+    },
+    {
+      name: 'mention1',
+      type: 9, // MENTIONABLE (users or roles)
+      description: 'Additional user/role to mention (you are always mentioned)',
+      required: false
+    },
+    {
+      name: 'mention2',
+      type: 9, // MENTIONABLE (users or roles)
+      description: 'Additional user/role to mention',
+      required: false
+    },
+    {
+      name: 'mention3',
+      type: 9, // MENTIONABLE (users or roles)
+      description: 'Additional user/role to mention',
+      required: false
+    },
+    {
+      name: 'mention_everyone',
+      type: 5, // BOOLEAN
+      description: 'Mention @everyone (optional)',
+      required: false
     }
   ],
   
@@ -49,6 +74,42 @@ export default {
     const minutes = interaction.options.getInteger('minutes') || 0;
     const seconds = interaction.options.getInteger('seconds') || 0;
     const description = interaction.options.getString('description');
+    
+    // Collect all mentioned users/roles
+    const mentionedEntities = [];
+    for (let i = 1; i <= 3; i++) {
+      const mentionable = interaction.options.getMentionable(`mention${i}`);
+      if (mentionable) {
+        mentionedEntities.push(mentionable);
+      }
+    }
+    
+    // Check if @everyone was requested
+    const mentionEveryone = interaction.options.getBoolean('mention_everyone');
+    
+    // Build mention string - ALWAYS include the creator
+    let mentionString;
+    if (mentionEveryone) {
+      // @everyone already mentions everyone including the creator
+      mentionString = '@everyone';
+    } else {
+      // Always start with the creator
+      const mentions = [`<@${interaction.user.id}>`];
+      
+      // Add additional mentioned users/roles (avoid duplicate users)
+      mentionedEntities.forEach(entity => {
+        // Check if it's a user and if it's the creator
+        if (entity.id !== interaction.user.id) {
+          // For roles, use <@&roleId>, for users use <@userId>
+          const mentionFormat = entity.constructor.name === 'Role' 
+            ? `<@&${entity.id}>` 
+            : `<@${entity.id}>`;
+          mentions.push(mentionFormat);
+        }
+      });
+      
+      mentionString = mentions.join(' ');
+    }
     
     // Calculate total milliseconds
     const totalMs = 
@@ -109,52 +170,56 @@ export default {
         .setStyle(ButtonStyle.Danger)
     );
     
+    // Create reminder ID
+    const reminderId = `${interaction.user.id}_${Date.now()}`;
+    
+    // Save reminder to JSON file
+    const reminders = loadReminders();
+    const newReminder = {
+      id: reminderId,
+      userId: interaction.user.id,
+      mentionString: mentionString,
+      channelId: interaction.channelId,
+      guildId: interaction.guildId,
+      description,
+      triggerTime: triggerTime.getTime(),
+      createdAt: Date.now()
+    };
+    reminders.push(newReminder);
+    await saveReminders(reminders);
+    
+    // Schedule the reminder
+    scheduleReminder(interaction.client, newReminder, false);
+    
     // Send the initial response
+    let displayMention;
+    if (mentionString === '@everyone') {
+      displayMention = '@everyone';
+    } else if (mentionString === `<@${interaction.user.id}>`) {
+      displayMention = 'you';
+    } else {
+      // Show "you + others"
+      const otherMentions = mentionedEntities
+        .filter(entity => entity.id !== interaction.user.id)
+        .map(entity => {
+          return entity.constructor.name === 'Role' 
+            ? `<@&${entity.id}>` 
+            : `<@${entity.id}>`;
+        })
+        .join(' ');
+      displayMention = otherMentions ? `you + ${otherMentions}` : 'you';
+    }
+    
     await interaction.reply({
       content: 
         `✅ **Reminder Created!**\n` +
         `━━━━━━━━━━━━━━━━━━━━\n` +
         `⏰ **In:** ${timeString}\n` +
+        `👤 **Will mention:** ${displayMention}\n` +
         `📢 **For:** ${description}`
     });
     
-    // Set the timeout
-    const timeout = setTimeout(async () => {
-      try {
-        await interaction.followUp({
-          content: 
-            `🔔 **REMINDER** 🔔\n` +
-            `━━━━━━━━━━━━━━━━━━━━\n` +
-            `<@${interaction.user.id}> Drifter, your reminder:\n` +
-            `📢 **${description}**`
-        });
-      } catch (error) {
-        console.error('Error sending reminder:', error);
-      }
-    }, totalMs);
-    
-    // Store the timeout so it can be cancelled
-    // In a real implementation, you'd want to store this in a Map or database
-    // to handle bot restarts and multiple reminders
-    if (!interaction.client.reminders) {
-      interaction.client.reminders = new Map();
-    }
-    
-    const reminderId = `reminder_${interaction.user.id}_${Date.now()}`;
-    interaction.client.reminders.set(reminderId, {
-      timeout,
-      userId: interaction.user.id,
-      channelId: interaction.channelId,
-      description,
-      triggerTime: triggerTime.getTime(),
-      cancel: () => {
-        clearTimeout(timeout);
-        interaction.client.reminders.delete(reminderId);
-      }
-    });
-    
-    // For now, we'll just log that we've set the reminder
-    console.log(`Set reminder for ${interaction.user.tag} in ${timeString}: ${description}`);
+    console.log(`✅ Saved and scheduled reminder for ${interaction.user.tag} (mentioning ${mentionString}) in ${timeString}: ${description}`);
     
     // Send the ephemeral message with the embed
     await interaction.followUp({
