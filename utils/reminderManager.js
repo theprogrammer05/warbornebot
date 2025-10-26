@@ -20,7 +20,10 @@ function loadReminders() {
 // Save reminders to file and GitHub
 async function saveReminders(reminders) {
   fs.writeFileSync(remindersFile, JSON.stringify(reminders, null, 2));
-  await updateGitHubFile('reminders.json', reminders, 'Update reminders via Discord bot');
+  
+  // Sync to GitHub in background (don't await to avoid blocking)
+  updateGitHubFile('reminders.json', reminders, 'Update reminders via Discord bot')
+    .catch(err => console.error('⚠️ GitHub sync failed (non-critical):', err));
 }
 
 // Remove a reminder from the JSON file
@@ -94,23 +97,29 @@ function scheduleReminder(client, reminder, silent = false) {
 
 // Initialize all reminders on bot startup
 export function initializeReminders(client) {
-  console.log('🔄 Loading reminders from reminders.json...');
-  
-  const reminders = loadReminders();
-  
-  if (reminders.length === 0) {
-    console.log('📭 No reminders to load.');
-    return;
+  try {
+    console.log('🔄 Loading reminders from reminders.json...');
+    console.log(`📁 Reminder file path: ${remindersFile}`);
+    
+    const reminders = loadReminders();
+    
+    if (reminders.length === 0) {
+      console.log('📭 No reminders to load.');
+      return;
+    }
+    
+    console.log(`📬 Found ${reminders.length} reminder(s). Scheduling...`);
+    
+    // Schedule each reminder silently (no messages sent)
+    reminders.forEach((reminder, index) => {
+      console.log(`  ${index + 1}. Reminder ID: ${reminder.id}, Trigger: ${new Date(reminder.triggerTime).toLocaleString()}`);
+      scheduleReminder(client, reminder, true);
+    });
+    
+    console.log(`✅ Reminder system initialized with ${activeTimeouts.size} active reminder(s).`);
+  } catch (error) {
+    console.error('❌ Error initializing reminders:', error);
   }
-  
-  console.log(`📬 Found ${reminders.length} reminder(s). Scheduling...`);
-  
-  // Schedule each reminder silently (no messages sent)
-  reminders.forEach(reminder => {
-    scheduleReminder(client, reminder, true);
-  });
-  
-  console.log(`✅ Reminder system initialized with ${activeTimeouts.size} active reminder(s).`);
 }
 
 // Export for use in other modules

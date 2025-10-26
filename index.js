@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { Client, GatewayIntentBits, REST, Routes, MessageFlags } from 'discord.js';
 import dotenv from 'dotenv';
+import { initializeReminders } from './utils/reminderManager.js';
 dotenv.config();
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
@@ -77,29 +78,31 @@ client.on('interactionCreate', async interaction => {
 
 // Automatic daily schedule posting (CST-based)
 client.once('clientReady', async () => {
-  console.log(`✅ Bot logged in as ${client.user.tag}`);
+  try {
+    console.log(`✅ Bot logged in as ${client.user.tag}`);
 
-  const scheduleFile = path.join(process.cwd(), 'schedule.json');
-  if (!fs.existsSync(scheduleFile)) {
-    console.warn('⚠️ schedule.json not found. Automatic posting disabled.');
-    return;
-  }
+    // Initialize reminder system
+    initializeReminders(client);
+
+    const scheduleFile = path.join(process.cwd(), 'schedule.json');
+    if (!fs.existsSync(scheduleFile)) {
+      console.warn('⚠️ schedule.json not found. Automatic posting disabled.');
+      return;
+    }
 
   const schedule = JSON.parse(fs.readFileSync(scheduleFile, 'utf8'));
   const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
-  // Helper to convert current UTC time to CST (UTC-6)
-  const getCSTDate = () => {
-    const now = new Date();
-    // get UTC milliseconds, then offset by -6 hours
-    const utcMillis = now.getTime() + now.getTimezoneOffset() * 60000;
-    return new Date(utcMillis - 6 * 60 * 60 * 1000);
+  // Helper to convert current UTC time to Central Time (handles CST/CDT automatically)
+  const getCentralTime = () => {
+    // Use Intl.DateTimeFormat to properly handle CST/CDT
+    return new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Chicago' }));
   };
 
   // Helper to post today's and tomorrow's events
   const postDailySchedule = async () => {
     try {
-      const now = getCSTDate();
+      const now = getCentralTime();
       const todayIndex = now.getDay();
       const tomorrowIndex = (todayIndex + 1) % 7;
 
@@ -146,31 +149,35 @@ client.once('clientReady', async () => {
       message += `\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n💡 *Use \`/wb-schedule view\` to see the full week!*`;
 
       await channel.send(message);
-      console.log(`✅ Posted schedule for ${today} (CST)`);
+      console.log(`✅ Posted schedule for ${today} (Central Time)`);
     } catch (err) {
       console.error('❌ Error posting schedule:', err);
     }
   };
 
-  // Calculate time until next midnight CST
-  const now = getCSTDate();
-  const nextMidnightCST = new Date(
-    now.getFullYear(),
-    now.getMonth(),
-    now.getDate() + 1,
-    0, 0, 5
-  );
-  const millisUntilMidnight = nextMidnightCST - now;
+  // Calculate time until next midnight Central Time
+  const now = getCentralTime();
+  
+  // Create next midnight in Central Time
+  const nextMidnight = new Date(now);
+  nextMidnight.setHours(24, 0, 5, 0); // Set to midnight + 5 seconds
+  
+  const millisUntilMidnight = nextMidnight - now;
 
   console.log(
-    `🕒 Next schedule post in ${Math.round(millisUntilMidnight / 1000 / 60)} minutes (CST).`
+    `🕒 Next schedule post in ${Math.round(millisUntilMidnight / 1000 / 60)} minutes (Central Time).`
   );
+  console.log(`📅 Current Central Time: ${now.toLocaleString('en-US', { timeZone: 'America/Chicago' })}`);
+  console.log(`📅 Next post at: ${nextMidnight.toLocaleString('en-US', { timeZone: 'America/Chicago' })}`);
 
-  // Schedule first post at next midnight CST
+  // Schedule first post at next midnight Central Time
   setTimeout(() => {
-    postDailySchedule(); // Run once at midnight CST
+    postDailySchedule(); // Run once at midnight
     setInterval(postDailySchedule, 24 * 60 * 60 * 1000); // Then every 24h
   }, millisUntilMidnight);
+  } catch (error) {
+    console.error('❌ Error in clientReady handler:', error);
+  }
 });
 
 client.login(DISCORD_TOKEN).then(() => console.log('✅ Bot logged in successfully.'));
