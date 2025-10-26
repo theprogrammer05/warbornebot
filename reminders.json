@@ -8,15 +8,5 @@
     "description": "Testing persistent reminder",
     "triggerTime": 1761461223630,
     "createdAt": 1761460983633
-  },
-  {
-    "id": "150905714255200256_1761461300600",
-    "userId": "150905714255200256",
-    "mentionString": "<@150905714255200256>",
-    "channelId": "1427422095704326224",
-    "guildId": "204789345301954561",
-    "description": "testing",
-    "triggerTime": 1761461320598,
-    "createdAt": 1761461300600
   }
 ]
