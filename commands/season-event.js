@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 
 export default {
-  name: 'season-event',
+  name: 'wb-season-event',
   description: 'Set the start date of a season event.',
   subcommands: [
     {

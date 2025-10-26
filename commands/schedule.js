@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 
 export default {
-  name: 'schedule',
+  name: 'wb-schedule',
   description: 'Displays the weekly schedule.',
   execute(interaction) {
     const scheduleFile = path.join(process.cwd(), 'schedule.json');

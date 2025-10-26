@@ -103,7 +103,7 @@ function paginate(array, pageSize, pageNumber) {
 }
 
 export default {
-  name: 'faq',
+  name: 'wb-faq',
   description: 'Manage FAQs: list, add, or remove.',
   options: [
     { name: 'list', type: 1, description: 'List all FAQs' },

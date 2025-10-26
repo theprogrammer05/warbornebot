@@ -1,7 +1,7 @@
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } from 'discord.js';
 
 export default {
-  name: 'reminder',
+  name: 'wb-reminder',
   description: 'Set a reminder that will mention you when the time is up',
   options: [
     {

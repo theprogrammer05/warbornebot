@@ -1,5 +1,5 @@
 export default {
-  name: 'commands',
+  name: 'wb-commands',
   description: 'Shows a list of all bot commands.',
   async execute(interaction) {
     const commands = interaction.client.commands;

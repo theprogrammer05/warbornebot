@@ -21,7 +21,7 @@ function formatNumber(num) {
 }
 
 export default {
-  name: 'research',
+  name: 'wb-research',
   description: 'View research information (drifter, driftmark, or equip)',
   options: [
     {

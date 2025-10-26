@@ -1,5 +1,5 @@
 export default {
-  name: 'price',
+  name: 'wb-price',
   description: 'Calculates Solarbite break-even value from input.',
   async execute(interaction) {
     const userInput = interaction.options.getString('numbers');
