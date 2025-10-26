@@ -9,23 +9,23 @@ export default {
       required: true
     },
     {
-      name: 'chest_size',
+      name: 'starfall_chest_size',
       type: 3, // STRING
       description: 'Starfall Chest Size (e.g., 170k, 340k, 340000)',
       required: true
     },
     {
-      name: 'solarbite_cost',
+      name: 'starfall_chest_solarbite_cost',
       type: 3, // STRING
-      description: 'Solarbite Starfall Chest cost (e.g., 30)',
+      description: 'Starfall Chest Solarbite cost (e.g., 30)',
       required: true
     }
   ],
   async execute(interaction) {
     // Get input values
     const equipCostInput = interaction.options.getString('equip_cost');
-    const chestCostInput = interaction.options.getString('chest_size');
-    const solarbiteCostInput = interaction.options.getString('solarbite_cost');
+    const chestCostInput = interaction.options.getString('starfall_chest_size');
+    const solarbiteCostInput = interaction.options.getString('starfall_chest_solarbite_cost');
 
     // Helper function to parse input values
     const parseInput = (input, name) => {
