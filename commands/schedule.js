@@ -97,13 +97,13 @@ export default {
     // ---------- VIEW ----------
     if (sub === 'view' || !sub) {
       const dayEmojis = {
-        'Sunday': '🌞',
-        'Monday': '💼',
-        'Tuesday': '⚔️',
-        'Wednesday': '🎓',
-        'Thursday': '⚡',
-        'Friday': '🎉',
-        'Saturday': '🎖️'
+        'Sunday': '😴',
+        'Monday': '😫',
+        'Tuesday': '😐',
+        'Wednesday': '🙂',
+        'Thursday': '😊',
+        'Friday': '😄',
+        'Saturday': '🥳'
       };
 
       const lines = VALID_DAYS.map(day => {

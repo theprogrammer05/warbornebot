@@ -114,15 +114,15 @@ client.once('ready', async () => {
         return;
       }
 
-      // Day emoji mapping
+      // Day emoji mapping (progression from tired to excited)
       const dayEmojis = {
-        'Sunday': '🌞',
-        'Monday': '💼',
-        'Tuesday': '⚔️',
-        'Wednesday': '🎓',
-        'Thursday': '⚡',
-        'Friday': '🎉',
-        'Saturday': '🎖️'
+        'Sunday': '😴',
+        'Monday': '😫',
+        'Tuesday': '😐',
+        'Wednesday': '🙂',
+        'Thursday': '😊',
+        'Friday': '😄',
+        'Saturday': '🥳'
       };
 
       // Format today's events
