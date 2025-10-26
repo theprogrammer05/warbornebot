@@ -19,13 +19,24 @@ const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('
 
 const commands = [];
 
+// Create a collection to store commands in the client
+client.commands = new Map();
+
 for (const file of commandFiles) {
-  const command = await import(`./commands/${file}`);
-  if (!command.default?.name || !command.default?.description) {
-    console.warn(`⚠️ Command file ${file} is missing required properties.`);
-    continue;
+  try {
+    const command = await import(`./commands/${file}`);
+    if (!command.default?.name || !command.default?.description) {
+      console.warn(`⚠️ Command file ${file} is missing required properties.`);
+      continue;
+    }
+    // Add command to the collection
+    client.commands.set(command.default.name, command.default);
+    // Also add to the commands array for registration
+    commands.push(command.default);
+    console.log(`✅ Loaded command: ${command.default.name}`);
+  } catch (error) {
+    console.error(`❌ Error loading command ${file}:`, error);
   }
-  commands.push(command.default);
 }
 
 // Register commands with Discord (guild-specific)

@@ -104,9 +104,8 @@ function paginate(array, pageSize, pageNumber) {
 
 export default {
   name: 'wb-faq',
-  description: 'Manage FAQs: list, add, or remove.',
+  description: 'View or manage FAQs',
   options: [
-    { name: 'list', type: 1, description: 'List all FAQs' },
     {
       name: 'add',
       type: 1,
@@ -127,61 +126,84 @@ export default {
   ],
 
   async execute(interaction) {
+    // Default to list view if no subcommand is provided
     const sub = interaction.options.getSubcommand(false);
+    
+    // If no subcommand, show the list
     if (!sub) {
+      return this.showFaqList(interaction);
+    }
+    
+    // Show help if an invalid subcommand is provided
+    if (!['add', 'remove'].includes(sub)) {
       return interaction.reply({
-        content: '❌ You must specify a subcommand: list, add, or remove.',
+        content: '❌ Invalid subcommand. Use one of: `/wb-faq`, `/wb-faq add`, or `/wb-faq remove`',
         ephemeral: true,
       });
     }
 
     const faqs = JSON.parse(fs.readFileSync(faqFile, 'utf8'));
 
-    // ---------- LIST ----------
-    if (sub === 'list') {
-      if (!faqs.length) return interaction.reply({ content: '❌ No FAQs found.', ephemeral: true });
+  // Method to show FAQ list
+  async showFaqList(interaction) {
+    const faqs = JSON.parse(fs.readFileSync(faqFile, 'utf8'));
+    
+    if (!faqs.length) return interaction.reply({ content: '❌ No FAQs found.', ephemeral: true });
 
-      const pageSize = 5;
-      let page = 0;
+    const pageSize = 5;
+    let page = 0;
 
-      const getContent = (page) =>
-        paginate(faqs, pageSize, page)
-          .map((faq, i) => `**${i + 1 + page * pageSize}.** ${faq.question} — ${faq.answer}`)
-          .join('\n');
+    const getContent = (page) => {
+      const faqList = paginate(faqs, pageSize, page)
+        .map((faq, i) => `**${i + 1 + page * pageSize}.** ${faq.question} — ${faq.answer}`)
+        .join('\n');
+      return `📚 **FAQ List** (Page ${page + 1}/${Math.ceil(faqs.length / pageSize)})\n\n${faqList}`;
+    };
 
-      const row = new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setCustomId('prev').setLabel('⬅️ Previous').setStyle(ButtonStyle.Primary).setDisabled(true),
-        new ButtonBuilder().setCustomId('next').setLabel('Next ➡️').setStyle(ButtonStyle.Primary).setDisabled(faqs.length <= pageSize)
-      );
+    const row = new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId('prev')
+        .setLabel('⬅️ Previous')
+        .setStyle(ButtonStyle.Primary)
+        .setDisabled(true),
+      new ButtonBuilder()
+        .setCustomId('next')
+        .setLabel('Next ➡️')
+        .setStyle(ButtonStyle.Primary)
+        .setDisabled(faqs.length <= pageSize)
+    );
 
-      const reply = await interaction.reply({
-        content: getContent(page),
-        components: [row],
-        ephemeral: false,
-        fetchReply: true,
-      });
+    const reply = await interaction.reply({
+      content: getContent(page),
+      components: [row],
+      ephemeral: false,
+      fetchReply: true,
+    });
 
-      const collector = reply.createMessageComponentCollector({ componentType: ComponentType.Button, time: 60000 });
+    const collector = reply.createMessageComponentCollector({ 
+      componentType: ComponentType.Button, 
+      time: 60000 
+    });
 
-      collector.on('collect', (btn) => {
-        if (btn.user.id !== interaction.user.id) return btn.reply({ content: '❌ Not for you', ephemeral: true });
+    collector.on('collect', (btn) => {
+      if (btn.user.id !== interaction.user.id) {
+        return btn.reply({ content: '❌ This is not your FAQ list!', ephemeral: true });
+      }
 
-        if (btn.customId === 'next') page++;
-        if (btn.customId === 'prev') page--;
+      if (btn.customId === 'next') page++;
+      if (btn.customId === 'prev') page--;
 
-        row.components[0].setDisabled(page === 0);
-        row.components[1].setDisabled((page + 1) * pageSize >= faqs.length);
+      row.components[0].setDisabled(page === 0);
+      row.components[1].setDisabled((page + 1) * pageSize >= faqs.length);
 
-        btn.update({ content: getContent(page), components: [row] });
-      });
+      btn.update({ content: getContent(page), components: [row] });
+    });
 
-      collector.on('end', () => {
-        row.components.forEach((btn) => btn.setDisabled(true));
-        interaction.editReply({ components: [row] }).catch(() => {});
-      });
-
-      return;
-    }
+    collector.on('end', () => {
+      row.components.forEach((btn) => btn.setDisabled(true));
+      interaction.editReply({ components: [row] }).catch(() => {});
+    });
+  },
 
     // ---------- ADD ----------
     if (sub === 'add') {
