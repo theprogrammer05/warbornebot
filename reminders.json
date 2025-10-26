@@ -8,25 +8,5 @@
     "description": "UPGRADE DRIFTMARK",
     "triggerTime": 1761486194887,
     "createdAt": 1761462374889
-  },
-  {
-    "id": "150905714255200256_1761462380490",
-    "userId": "150905714255200256",
-    "mentionString": "<@150905714255200256>",
-    "channelId": "1427422095704326224",
-    "guildId": "204789345301954561",
-    "description": "This is a test reminder",
-    "triggerTime": 1761462560490,
-    "createdAt": 1761462380490
-  },
-  {
-    "id": "150905714255200256_1761462399624",
-    "userId": "150905714255200256",
-    "mentionString": "<@150905714255200256>",
-    "channelId": "1427422095704326224",
-    "guildId": "204789345301954561",
-    "description": "second test",
-    "triggerTime": 1761462579624,
-    "createdAt": 1761462399625
   }
 ]
