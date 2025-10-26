@@ -118,7 +118,7 @@ export default {
     const timeout = setTimeout(async () => {
       try {
         await interaction.followUp({
-          content: `⏰ <@${interaction.user.id}>, your reminder: ${description}`,
+          content: `⏰ <@${interaction.user.id}>, Drifter, this is your reminder for: ${description}`,
           ephemeral: false
         });
       } catch (error) {

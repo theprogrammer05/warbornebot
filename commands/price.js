@@ -9,9 +9,9 @@ export default {
       required: true
     },
     {
-      name: 'chest_cost',
+      name: 'chest_size',
       type: 3, // STRING
-      description: 'Starfall Chest cost (e.g., 340k, 340000)',
+      description: 'Starfall Chest Size (e.g., 170k, 340k, 340000)',
       required: true
     },
     {
@@ -24,7 +24,7 @@ export default {
   async execute(interaction) {
     // Get input values
     const equipCostInput = interaction.options.getString('equip_cost');
-    const chestCostInput = interaction.options.getString('chest_cost');
+    const chestCostInput = interaction.options.getString('chest_size');
     const solarbiteCostInput = interaction.options.getString('solarbite_cost');
 
     // Helper function to parse input values
@@ -65,12 +65,12 @@ export default {
 
       await interaction.reply({
         content:
-          `🌟 **Solarbite Break-Even Value**\n` +
-          `• Equipment Cost: ${equipStarfallCost.toLocaleString()} Starfall\n` +
-          `• Chest Cost: ${starfallChestCost.toLocaleString()} Starfall\n` +
-          `• Solarbite Cost: ${solarbiteStarfallChestCost} Solarbite\n\n` +
-          `• **True Value:** ${formattedTrue} Solarbite\n` +
-          `• **Market Value (after 6% cut):** ${formattedMarket} Solarbite`,
+          `🔶 **Solarbite Break-Even Value**\n` +
+          `• Equipment Cost: ${equipStarfallCost.toLocaleString()} 🪙 Starfall\n` +
+          `• Chest Size: ${starfallChestCost.toLocaleString()} 🪙 Starfall\n` +
+          `• Solarbite Cost: ${solarbiteStarfallChestCost} 🔶 Solarbite\n\n` +
+          `• **True Value:** ${formattedTrue} 🔶 Solarbite\n` +
+          `• **Market Value (after 6% cut):** ${formattedMarket} 🔶 Solarbite`,
       });
     } catch (error) {
       console.error('Error in price calculation:', error);
