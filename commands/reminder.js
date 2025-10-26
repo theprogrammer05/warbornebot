@@ -214,7 +214,7 @@ export default {
       content: 
         `✅ **Reminder Created!**\n` +
         `━━━━━━━━━━━━━━━━━━━━\n` +
-        `⏰ **Timer:** ${timeString}\n` +
+        `⏰ **Time:** ${timeString}\n` +
         `📢 **Reminder:** ${description}`
     });
     
