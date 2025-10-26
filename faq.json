@@ -1,14 +1,14 @@
 [
   {
-    "question": "What do I do?",
-    "answer": "Ask Kyle."
-  },
-  {
     "question": "How do I add a  season event?",
     "answer": "Use the /season-event command with a date to set the season event."
   },
   {
     "question": "How do I check the daily schedule?",
     "answer": "Use the /schedule command to see today's events."
+  },
+  {
+    "question": "Why are Banks bad now?",
+    "answer": "They are distributed to the Warband every 2 days, whereas in S1 it was 3 days. The 1 day difference of \"filling the tank\" means less money to steal. =)"
   }
 ]
