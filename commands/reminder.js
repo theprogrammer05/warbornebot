@@ -5,6 +5,12 @@ export default {
   description: 'Set a reminder that will mention you when the time is up',
   options: [
     {
+      name: 'description',
+      type: 3, // STRING
+      description: 'What is this reminder for?',
+      required: true
+    },
+    {
       name: 'days',
       type: 4, // INTEGER
       description: 'Number of days',
@@ -34,12 +40,6 @@ export default {
       required: false,
       min_value: 0,
       max_value: 59
-    },
-    {
-      name: 'description',
-      type: 3, // STRING
-      description: 'What is this reminder for?',
-      required: true
     }
   ],
   
