@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { Client, GatewayIntentBits, REST, Routes, MessageFlags } from 'discord.js';
 import dotenv from 'dotenv';
-import { initializeReminders, forceGitHubSync } from './utils/reminderManager.js';
+import { initializeReminders } from './utils/reminderManager.js';
 dotenv.config();
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
@@ -230,19 +230,6 @@ client.once('clientReady', async () => {
   } catch (error) {
     console.error('❌ Error in clientReady handler:', error);
   }
-});
-
-// Graceful shutdown - force sync before exit
-process.on('SIGTERM', async () => {
-  console.log('⚠️ SIGTERM received, syncing reminders before shutdown...');
-  await forceGitHubSync();
-  process.exit(0);
-});
-
-process.on('SIGINT', async () => {
-  console.log('⚠️ SIGINT received, syncing reminders before shutdown...');
-  await forceGitHubSync();
-  process.exit(0);
 });
 
 client.login(DISCORD_TOKEN).then(() => console.log('✅ Bot logged in successfully.'));
