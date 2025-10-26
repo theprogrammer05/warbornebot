@@ -107,6 +107,11 @@ export default {
   description: 'View or manage FAQs',
   options: [
     {
+      name: 'list',
+      type: 1,
+      description: 'List all FAQs',
+    },
+    {
       name: 'add',
       type: 1,
       description: 'Add a new FAQ',
@@ -187,12 +192,11 @@ export default {
   },
 
   async execute(interaction) {
-    // Default to list view if no subcommand is provided
-    const sub = interaction.options.getSubcommand(false);
+    const sub = interaction.options.getSubcommand();
     const faqs = JSON.parse(fs.readFileSync(faqFile, 'utf8'));
     
-    // If no subcommand, show the list
-    if (!sub) {
+    // Handle list subcommand or no subcommand
+    if (sub === 'list' || !sub) {
       return this.showFaqList(interaction);
     }
     
