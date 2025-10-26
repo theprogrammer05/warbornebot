@@ -1,9 +1,5 @@
 [
   {
-    "question": "How do I add a  season event?",
-    "answer": "Use the /season-event command with a date to set the season event."
-  },
-  {
     "question": "How do I check the daily schedule?",
     "answer": "Use the /schedule command to see today's events."
   },
