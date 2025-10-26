@@ -63,10 +63,10 @@ export default {
         .join('\n\n');
       return (
         `📚 **Frequently Asked Questions**\n` +
-        `━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
-        `Page **${page + 1}** of **${Math.ceil(faqs.length / pageSize)}** • Total: **${faqs.length}** FAQs\n\n` +
+        `━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
         `${faqList}\n\n` +
         `━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
+        `📄 Page **${page + 1}** of **${Math.ceil(faqs.length / pageSize)}** • Total: **${faqs.length}** FAQs\n` +
         `💡 *Use \`/wb-faq add\` to contribute!*`
       );
     };
