@@ -1,0 +1,88 @@
+{
+  "drifter": {
+    "name": "Drifter",
+    "description": "Drifter tier values in Exergy",
+    "tiers": [
+      {
+        "tier": "VIII",
+        "exergy": 36400
+      },
+      {
+        "tier": "IX",
+        "exergy": 47300
+      },
+      {
+        "tier": "X",
+        "exergy": 61500
+      },
+      {
+        "tier": "XI",
+        "exergy": 79900
+      }
+    ]
+  },
+  "driftmark": {
+    "name": "Driftmark",
+    "description": "Driftmark tiers with Exergy, Starfall values, and duration",
+    "tiers": [
+      {
+        "tier": "V",
+        "exergy": 1400,
+        "starfall": 17300,
+        "duration": "20 min"
+      },
+      {
+        "tier": "VI",
+        "exergy": 12000,
+        "starfall": 41300,
+        "duration": "4 hr"
+      },
+      {
+        "tier": "VII",
+        "exergy": 30000,
+        "starfall": 282000,
+        "duration": "1 day 18 hr"
+      },
+      {
+        "tier": "VIII",
+        "exergy": 45000,
+        "starfall": 812000,
+        "duration": "3 days"
+      },
+      {
+        "tier": "IX",
+        "exergy": 60000,
+        "starfall": 3890000,
+        "duration": "3 days"
+      },
+      {
+        "tier": "X",
+        "exergy": 90000,
+        "starfall": 6000000,
+        "duration": "3 days"
+      }
+    ]
+  },
+  "equip": {
+    "name": "Equipment",
+    "description": "Equipment tier values in Exergy",
+    "tiers": [
+      {
+        "tier": "VIII",
+        "exergy": 36400
+      },
+      {
+        "tier": "IX",
+        "exergy": 47300
+      },
+      {
+        "tier": "X",
+        "exergy": 61500
+      },
+      {
+        "tier": "XI",
+        "exergy": 79900
+      }
+    ]
+  }
+}
