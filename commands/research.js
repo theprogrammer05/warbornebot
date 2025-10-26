@@ -1,3 +1,21 @@
+/**
+ * RESEARCH COMMAND
+ * 
+ * Purpose: Display game research information in an organized format
+ * 
+ * Features:
+ * - Rich embed with categorized research data
+ * - Color-coded embeds for better visibility
+ * - Reads from research.json data file
+ * - Ephemeral response (only visible to command user)
+ * 
+ * Example Usage:
+ * /wb-research
+ * 
+ * Permissions: Everyone
+ * Data Storage: research.json (read-only)
+ */
+
 import fs from 'fs';
 import path from 'path';
 import { EmbedBuilder, MessageFlags } from 'discord.js';

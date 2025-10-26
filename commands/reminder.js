@@ -1,3 +1,25 @@
+/**
+ * REMINDER COMMAND
+ * 
+ * Purpose: Set persistent reminders that mention users/roles when time is up
+ * 
+ * Features:
+ * - Set custom time (days, hours, minutes, seconds)
+ * - Mention up to 3 users or roles
+ * - Optional @everyone mention
+ * - Creator is always mentioned
+ * - Cancel button (only visible to creator)
+ * - Persists across bot restarts via reminders.json
+ * 
+ * Example Usage:
+ * /wb-reminder description:"Check the oven" days:0 hours:1 minutes:30 seconds:0
+ * /wb-reminder description:"Team meeting" days:0 hours:0 minutes:15 seconds:0 mention1:@JohnDoe
+ * /wb-reminder description:"Server restart" days:0 hours:2 minutes:0 seconds:0 mention_everyone:true
+ * 
+ * Permissions: Everyone
+ * Data Storage: reminders.json (synced to GitHub)
+ */
+
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, MessageFlags } from 'discord.js';
 import { scheduleReminder, loadReminders, saveReminders } from '../utils/reminderManager.js';
 

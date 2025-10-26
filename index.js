@@ -169,15 +169,15 @@ client.once('clientReady', async () => {
         return;
       }
 
-      // Day emoji mapping (progression from tired to excited)
+      // Day emoji mapping (themed to match daily events)
       const dayEmojis = {
-        'Sunday': '😴',
-        'Monday': '😫',
-        'Tuesday': '😐',
-        'Wednesday': '🙂',
-        'Thursday': '😊',
-        'Friday': '😄',
-        'Saturday': '🥳'
+        'Sunday': '♻️',      // Double Scrap Post (recycling/scrap)
+        'Monday': '🏆',      // 100% Harvest Vault Experience & Chest Rewards
+        'Tuesday': '⚡',     // Exergy Event (energy)
+        'Wednesday': '📈',   // 50% Experience (growth/leveling up)
+        'Thursday': '☢️',    // Radiation Storm
+        'Friday': '⚔️',      // Faction Contribution from PVP (combat)
+        'Saturday': '🥩'     // Protein Event (meat/protein)
       };
 
       // Format today's events

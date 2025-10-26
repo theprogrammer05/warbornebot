@@ -1,3 +1,20 @@
+/**
+ * COMMANDS COMMAND
+ * 
+ * Purpose: Display a list of all available bot commands with descriptions
+ * 
+ * Features:
+ * - Dynamically loads all commands from the commands directory
+ * - Shows command names and descriptions
+ * - Formatted for easy readability
+ * - Ephemeral response (only visible to command user)
+ * 
+ * Example Usage:
+ * /wb-commands
+ * 
+ * Permissions: Everyone
+ */
+
 import fs from 'fs';
 import path from 'path';
 import { MessageFlags } from 'discord.js';

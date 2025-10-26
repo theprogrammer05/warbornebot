@@ -1,3 +1,29 @@
+/**
+ * SCHEDULE COMMAND
+ * 
+ * Purpose: Display today's game events and manage the weekly schedule
+ * 
+ * Subcommands:
+ * - today: Show today's events (Everyone)
+ * - view: View schedule for a specific day (Everyone)
+ * - set: Set events for a specific day (Admins only)
+ * 
+ * Features:
+ * - Automatically detects current day (CST timezone)
+ * - Rich embed formatting
+ * - Admin-only schedule modification
+ * - Persistent storage via schedule.json
+ * - Automatic daily posting at midnight CST
+ * 
+ * Example Usage:
+ * /wb-schedule today
+ * /wb-schedule view day:"Monday"
+ * /wb-schedule set day:"Monday" events:"100% Harvest Vault Experience & Chest Rewards"
+ * 
+ * Permissions: View (Everyone), Set (Administrators)
+ * Data Storage: schedule.json (synced to GitHub)
+ */
+
 import fs from 'fs';
 import path from 'path';
 import { MessageFlags } from 'discord.js';
