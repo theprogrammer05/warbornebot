@@ -125,25 +125,6 @@ export default {
     },
   ],
 
-  async execute(interaction) {
-    // Default to list view if no subcommand is provided
-    const sub = interaction.options.getSubcommand(false);
-    
-    // If no subcommand, show the list
-    if (!sub) {
-      return this.showFaqList(interaction);
-    }
-    
-    // Show help if an invalid subcommand is provided
-    if (!['add', 'remove'].includes(sub)) {
-      return interaction.reply({
-        content: '❌ Invalid subcommand. Use one of: `/wb-faq`, `/wb-faq add`, or `/wb-faq remove`',
-        ephemeral: true,
-      });
-    }
-
-    const faqs = JSON.parse(fs.readFileSync(faqFile, 'utf8'));
-
   // Method to show FAQ list
   async showFaqList(interaction) {
     const faqs = JSON.parse(fs.readFileSync(faqFile, 'utf8'));
@@ -205,7 +186,17 @@ export default {
     });
   },
 
-    // ---------- ADD ----------
+  async execute(interaction) {
+    // Default to list view if no subcommand is provided
+    const sub = interaction.options.getSubcommand(false);
+    const faqs = JSON.parse(fs.readFileSync(faqFile, 'utf8'));
+    
+    // If no subcommand, show the list
+    if (!sub) {
+      return this.showFaqList(interaction);
+    }
+    
+    // Handle subcommands
     if (sub === 'add') {
       const question = interaction.options.getString('question');
       const answer = interaction.options.getString('answer');
