@@ -7,6 +7,10 @@ const remindersFile = path.join(process.cwd(), 'reminders.json');
 // Active timeouts map
 const activeTimeouts = new Map();
 
+// Debounce timer for GitHub sync
+let githubSyncTimeout = null;
+const GITHUB_SYNC_DELAY = 2 * 60 * 1000; // 2 minutes
+
 // Load reminders from file
 function loadReminders() {
   try {
@@ -17,13 +21,35 @@ function loadReminders() {
   }
 }
 
-// Save reminders to file and GitHub
+// Debounced GitHub sync function
+function scheduleDebouncedGitHubSync() {
+  // Clear existing timeout
+  if (githubSyncTimeout) {
+    clearTimeout(githubSyncTimeout);
+  }
+  
+  // Schedule new sync after delay
+  githubSyncTimeout = setTimeout(async () => {
+    try {
+      const reminders = loadReminders();
+      console.log(`🔄 Syncing reminders.json to GitHub (${reminders.length} reminder(s))...`);
+      await updateGitHubFile('reminders.json', reminders, 'Update reminders via Discord bot');
+      console.log('✅ GitHub sync completed');
+    } catch (err) {
+      console.error('⚠️ GitHub sync failed:', err);
+    }
+  }, GITHUB_SYNC_DELAY);
+  
+  console.log(`⏳ GitHub sync scheduled in ${GITHUB_SYNC_DELAY / 1000 / 60} minutes`);
+}
+
+// Save reminders to file and schedule debounced GitHub sync
 async function saveReminders(reminders) {
+  // Save to local file immediately
   fs.writeFileSync(remindersFile, JSON.stringify(reminders, null, 2));
   
-  // Sync to GitHub in background (don't await to avoid blocking)
-  updateGitHubFile('reminders.json', reminders, 'Update reminders via Discord bot')
-    .catch(err => console.error('⚠️ GitHub sync failed (non-critical):', err));
+  // Schedule debounced GitHub sync (batches multiple changes)
+  scheduleDebouncedGitHubSync();
 }
 
 // Remove a reminder from the JSON file
@@ -119,6 +145,25 @@ export function initializeReminders(client) {
     console.log(`✅ Reminder system initialized with ${activeTimeouts.size} active reminder(s).`);
   } catch (error) {
     console.error('❌ Error initializing reminders:', error);
+  }
+}
+
+// Force immediate GitHub sync (for graceful shutdown)
+export async function forceGitHubSync() {
+  if (githubSyncTimeout) {
+    clearTimeout(githubSyncTimeout);
+    githubSyncTimeout = null;
+  }
+  
+  try {
+    const reminders = loadReminders();
+    console.log(`🔄 Force syncing reminders.json to GitHub...`);
+    await updateGitHubFile('reminders.json', reminders, 'Update reminders via Discord bot');
+    console.log('✅ Force sync completed');
+    return true;
+  } catch (err) {
+    console.error('⚠️ Force sync failed:', err);
+    return false;
   }
 }
 
