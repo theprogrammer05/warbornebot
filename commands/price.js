@@ -1,3 +1,5 @@
+import { MessageFlags } from 'discord.js';
+
 export default {
   name: 'wb-price',
   description: 'Calculate the break-even Solarbite value for equipment',
@@ -81,7 +83,7 @@ export default {
       console.error('Error in price calculation:', error);
       await interaction.reply({
         content: error.message || '❌ An error occurred while calculating the price',
-        ephemeral: true
+        flags: MessageFlags.Ephemeral
       });
     }
   },

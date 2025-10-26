@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { MessageFlags } from 'discord.js';
 import { updateGitHubFile } from '../utils/github.js';
 
 const scheduleFile = path.join(process.cwd(), 'schedule.json');
@@ -125,7 +126,6 @@ export default {
           `${lines}\n\n` +
           `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
           `💡 *Use \`/wb-schedule add\` to add events*`,
-        ephemeral: false,
       });
     }
 
@@ -150,7 +150,7 @@ export default {
           `📅 **Day:** ${day}\n` +
           `🎯 **Event:** ${event}\n` +
           `🔢 **Position:** #${schedule[day].length}`,
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
     }
 
@@ -162,7 +162,7 @@ export default {
       if (!schedule[day] || schedule[day].length === 0) {
         return interaction.reply({
           content: `❌ **No Events Found**\n📅 **${day}** has no scheduled events.`,
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
       }
 
@@ -172,7 +172,7 @@ export default {
             `❌ **Invalid Event Number**\n` +
             `📅 **${day}** has **${schedule[day].length}** event(s).\n` +
             `🔢 Please choose a number between **1** and **${schedule[day].length}**.`,
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
       }
 
@@ -187,7 +187,7 @@ export default {
           `━━━━━━━━━━━━━━━━━━━━━━━\n` +
           `📅 **Day:** ${day}\n` +
           `🔢 **Event #${number}:** ${removed}`,
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
     }
   },

@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { EmbedBuilder } from 'discord.js';
+import { EmbedBuilder, MessageFlags } from 'discord.js';
 
 const researchFile = path.join(process.cwd(), 'research.json');
 
@@ -43,7 +43,7 @@ export default {
     if (!researchData) {
       return interaction.reply({
         content: '❌ Failed to load research data.',
-        ephemeral: true
+        flags: MessageFlags.Ephemeral
       });
     }
 
@@ -83,7 +83,7 @@ export default {
     if (!research) {
       return interaction.reply({
         content: '❌ Invalid research type. Available types: drifter, driftmark, equip, all',
-        ephemeral: true
+        flags: MessageFlags.Ephemeral
       });
     }
 

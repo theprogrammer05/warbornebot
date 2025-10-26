@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { Client, GatewayIntentBits, REST, Routes } from 'discord.js';
+import { Client, GatewayIntentBits, REST, Routes, MessageFlags } from 'discord.js';
 import dotenv from 'dotenv';
 dotenv.config();
 
@@ -70,13 +70,13 @@ client.on('interactionCreate', async interaction => {
     console.error(error);
     await interaction.reply({
       content: '❌ There was an error executing this command.',
-      ephemeral: true
+      flags: MessageFlags.Ephemeral
     });
   }
 });
 
 // Automatic daily schedule posting (CST-based)
-client.once('ready', async () => {
+client.once('clientReady', async () => {
   console.log(`✅ Bot logged in as ${client.user.tag}`);
 
   const scheduleFile = path.join(process.cwd(), 'schedule.json');

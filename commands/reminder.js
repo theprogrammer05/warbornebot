@@ -1,4 +1,4 @@
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } from 'discord.js';
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, MessageFlags } from 'discord.js';
 
 export default {
   name: 'wb-reminder',
@@ -61,7 +61,7 @@ export default {
     if (totalMs === 0) {
       return interaction.reply({
         content: '❌ **Invalid Time**\n⏱️ Please specify at least some time for the reminder!',
-        ephemeral: true
+        flags: MessageFlags.Ephemeral
       });
     }
     
@@ -69,7 +69,7 @@ export default {
     if (totalMs > 30 * 24 * 60 * 60 * 1000) {
       return interaction.reply({
         content: '❌ **Time Limit Exceeded**\n⏱️ Maximum reminder time is **30 days**',
-        ephemeral: true
+        flags: MessageFlags.Ephemeral
       });
     }
     
@@ -115,8 +115,7 @@ export default {
         `✅ **Reminder Created!**\n` +
         `━━━━━━━━━━━━━━━━━━━━\n` +
         `⏰ **In:** ${timeString}\n` +
-        `📢 **For:** ${description}`,
-      ephemeral: false
+        `📢 **For:** ${description}`
     });
     
     // Set the timeout
@@ -127,8 +126,7 @@ export default {
             `🔔 **REMINDER** 🔔\n` +
             `━━━━━━━━━━━━━━━━━━━━\n` +
             `<@${interaction.user.id}> Drifter, your reminder:\n` +
-            `📢 **${description}**`,
-          ephemeral: false
+            `📢 **${description}**`
         });
       } catch (error) {
         console.error('Error sending reminder:', error);
@@ -162,7 +160,7 @@ export default {
     await interaction.followUp({
       embeds: [embed],
       components: [row],
-      ephemeral: true
+      flags: MessageFlags.Ephemeral
     });
   }
 };

@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { MessageFlags } from 'discord.js';
 
 export default {
   name: 'wb-commands',
@@ -31,7 +32,7 @@ export default {
       if (commandsInfo.length === 0) {
         return interaction.reply({
           content: '❌ No commands found.',
-          ephemeral: true
+          flags: MessageFlags.Ephemeral
         });
       }
 
@@ -48,14 +49,14 @@ export default {
           `${commandList}\n` +
           `━━━━━━━━━━━━━━━━━━━━━━\n` +
           `💡 *Tip: Use \`/\` to see all commands with autocomplete!*`,
-        ephemeral: true
+        flags: MessageFlags.Ephemeral
       });
     
     } catch (error) {
       console.error('Error in wb-commands:', error);
       await interaction.reply({
         content: '❌ An error occurred while fetching commands.',
-        ephemeral: true
+        flags: MessageFlags.Ephemeral
       });
     }
   },

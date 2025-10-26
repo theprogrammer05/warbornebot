@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import Discord from 'discord.js';
+import Discord, { MessageFlags } from 'discord.js';
 import { updateGitHubFile } from '../utils/github.js';
 
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType } = Discord;
@@ -49,7 +49,7 @@ export default {
   async showFaqList(interaction) {
     const faqs = JSON.parse(fs.readFileSync(faqFile, 'utf8'));
     
-    if (!faqs.length) return interaction.reply({ content: '❌ No FAQs found.', ephemeral: true });
+    if (!faqs.length) return interaction.reply({ content: '❌ No FAQs found.', flags: MessageFlags.Ephemeral });
 
     const pageSize = 15;
     let page = 0;
@@ -98,7 +98,7 @@ export default {
 
     collector.on('collect', (btn) => {
       if (btn.user.id !== interaction.user.id) {
-        return btn.reply({ content: '❌ This is not your FAQ list!', ephemeral: true });
+        return btn.reply({ content: '❌ This is not your FAQ list!', flags: MessageFlags.Ephemeral });
       }
 
       if (btn.customId === 'next') page++;
@@ -141,14 +141,13 @@ export default {
           `💬 **Question:** ${question}\n` +
           `➡️ **Answer:** ${answer}\n` +
           `🔢 **FAQ #${faqs.length}**`,
-        ephemeral: false,
       });
     }
 
     // ---------- REMOVE ----------
     if (sub === 'remove') {
       const number = interaction.options.getInteger('number');
-      if (number < 1 || number > faqs.length) return interaction.reply({ content: '❌ Invalid FAQ number.', ephemeral: true });
+      if (number < 1 || number > faqs.length) return interaction.reply({ content: '❌ Invalid FAQ number.', flags: MessageFlags.Ephemeral });
 
       const removed = faqs.splice(number - 1, 1)[0];
       fs.writeFileSync(faqFile, JSON.stringify(faqs, null, 2));
@@ -160,7 +159,6 @@ export default {
           `━━━━━━━━━━━━━━━━━━━━━━━\n` +
           `💬 **Question:** ${removed.question}\n` +
           `➡️ **Answer:** ${removed.answer}`,
-        ephemeral: false,
       });
     }
   },
