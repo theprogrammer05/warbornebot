@@ -14,14 +14,14 @@ export default {
       name: 'days',
       type: 4, // INTEGER
       description: 'Number of days',
-      required: false,
+      required: true,
       min_value: 0
     },
     {
       name: 'hours',
       type: 4, // INTEGER
       description: 'Number of hours',
-      required: false,
+      required: true,
       min_value: 0,
       max_value: 23
     },
@@ -29,7 +29,7 @@ export default {
       name: 'minutes',
       type: 4, // INTEGER
       description: 'Number of minutes',
-      required: false,
+      required: true,
       min_value: 0,
       max_value: 59
     },
@@ -37,7 +37,7 @@ export default {
       name: 'seconds',
       type: 4, // INTEGER
       description: 'Number of seconds',
-      required: false,
+      required: true,
       min_value: 0,
       max_value: 59
     }
