@@ -46,15 +46,32 @@ const rest = new REST({ version: '10' }).setToken(DISCORD_TOKEN);
 (async () => {
   try {
     console.log('Started refreshing application (/) commands.');
-
-    await rest.put(
-      Routes.applicationGuildCommands(CLIENT_ID, GUILD_ID),
-      { body: commands }
+    
+    // First, clear all existing commands
+    const existingCommands = await rest.get(
+      Routes.applicationGuildCommands(CLIENT_ID, GUILD_ID)
     );
+    
+    // Delete all existing commands
+    const deletePromises = existingCommands.map(command => 
+      rest.delete(Routes.applicationGuildCommand(CLIENT_ID, GUILD_ID, command.id))
+    );
+    
+    await Promise.all(deletePromises);
+    console.log('✅ Cleared existing commands.');
 
-    console.log('✅ Successfully registered commands.');
+    // Register new commands
+    if (commands.length > 0) {
+      await rest.put(
+        Routes.applicationGuildCommands(CLIENT_ID, GUILD_ID),
+        { body: commands }
+      );
+      console.log(`✅ Successfully registered ${commands.length} commands.`);
+    } else {
+      console.warn('⚠️ No commands to register.');
+    }
   } catch (error) {
-    console.error('❌ Error registering commands:', error);
+    console.error('❌ Error managing commands:', error);
   }
 })();
 
