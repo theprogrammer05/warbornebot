@@ -1,7 +1,7 @@
 /**
  * SCHEDULE COMMAND
  * 
- * Purpose: Display today's game events and manage the weekly schedule
+ * Purpose: Display today's game events and manage the weekly schedule (responses are private)
  * 
  * Subcommands:
  * - today: Show today's events (Everyone)
@@ -124,16 +124,16 @@ export default {
     // ---------- VIEW ----------
     if (sub === 'view' || !sub) {
       const dayEmojis = {
-        'Sunday': '😴',
-        'Monday': '😫',
-        'Tuesday': '😐',
-        'Wednesday': '🙂',
-        'Thursday': '😊',
-        'Friday': '😄',
-        'Saturday': '🥳'
+        'Sunday': '♻️',      // Double Scrap Post (recycling/scrap)
+        'Monday': '🏆',      // 100% Harvest Vault Experience & Chest Rewards
+        'Tuesday': '⚡',     // Exergy Event (energy)
+        'Wednesday': '📈',   // 50% Experience (growth/leveling up)
+        'Thursday': '☢️',    // Radiation Storm
+        'Friday': '⚔️',      // Faction Contribution from PVP (combat)
+        'Saturday': '🥩'     // Protein Event (meat/protein)
       };
 
-      const lines = VALID_DAYS.map(day => {
+      const scheduleText = VALID_DAYS.map(day => {
         const events = schedule[day] || [];
         const emoji = dayEmojis[day] || '📅';
         
@@ -143,29 +143,34 @@ export default {
         
         const eventList = events.map((event, i) => `   **${i + 1}.** ${event}`).join('\n');
         return `${emoji} **${day}**\n${eventList}`;
-      }).join('\n\n');
+      }).join('\n\n') + '\n\n💡 *Use `/wb-schedule add` to add events*';
 
       return interaction.reply({
         content: 
           `📅 **Weekly Event Schedule**\n` +
           `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
-          `${lines}\n\n` +
-          `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
-          `💡 *Use \`/wb-schedule add\` to add events*`,
+          scheduleText,
+        flags: MessageFlags.Ephemeral
       });
     }
 
     // ---------- ADD ----------
     if (sub === 'add') {
+      if (!interaction.member.permissions.has('ADMINISTRATOR')) {
+        return interaction.reply({
+          content: '❌ **Permission Denied**\nYou need administrator permissions to modify the schedule.',
+          flags: MessageFlags.Ephemeral
+        });
+      }
+
       const day = interaction.options.getString('day');
       const event = interaction.options.getString('event');
 
       if (!schedule[day]) {
         schedule[day] = [];
       }
-
+      
       schedule[day].push(event);
-
       fs.writeFileSync(scheduleFile, JSON.stringify(schedule, null, 2));
       await updateGitHubFile('schedule.json', schedule, `Add event to ${day}`);
 
@@ -173,15 +178,22 @@ export default {
         content: 
           `✅ **Event Added Successfully!**\n` +
           `━━━━━━━━━━━━━━━━━━━━\n` +
-          `📅 **Day:** ${day}\n` +
-          `🎯 **Event:** ${event}\n` +
-          `🔢 **Position:** #${schedule[day].length}`,
-        flags: MessageFlags.Ephemeral,
+          `📅 **${day}**\n` +
+          `📝 **Event:** ${event}\n\n` +
+          `The schedule has been updated.`,
+        flags: MessageFlags.Ephemeral
       });
     }
 
     // ---------- REMOVE ----------
     if (sub === 'remove') {
+      if (!interaction.member.permissions.has('ADMINISTRATOR')) {
+        return interaction.reply({
+          content: '❌ **Permission Denied**\nYou need administrator permissions to modify the schedule.',
+          flags: MessageFlags.Ephemeral
+        });
+      }
+
       const day = interaction.options.getString('day');
       const number = interaction.options.getInteger('number');
 
@@ -197,13 +209,12 @@ export default {
           content: 
             `❌ **Invalid Event Number**\n` +
             `📅 **${day}** has **${schedule[day].length}** event(s).\n` +
-            `🔢 Please choose a number between **1** and **${schedule[day].length}**.`,
+            `Please choose a number between 1 and ${schedule[day].length}.`,
           flags: MessageFlags.Ephemeral,
         });
       }
 
-      const removed = schedule[day].splice(number - 1, 1)[0];
-
+      const removedEvent = schedule[day].splice(number - 1, 1)[0];
       fs.writeFileSync(scheduleFile, JSON.stringify(schedule, null, 2));
       await updateGitHubFile('schedule.json', schedule, `Remove event from ${day}`);
 
@@ -211,9 +222,9 @@ export default {
         content: 
           `✅ **Event Removed Successfully!**\n` +
           `━━━━━━━━━━━━━━━━━━━━━━━\n` +
-          `📅 **Day:** ${day}\n` +
-          `🔢 **Event #${number}:** ${removed}`,
-        flags: MessageFlags.Ephemeral,
+          `🗑️ Removed event #${number} from **${day}**\n\n` +
+          `The schedule has been updated.`,
+        flags: MessageFlags.Ephemeral
       });
     }
   },
