@@ -62,14 +62,8 @@ async function deployCommands() {
       { body: commandJSONs }
     );
     
-    // Also update the guild commands (for testing)
-    if (process.env.GUILD_ID) {
-      console.log('🔄 Also updating guild commands for testing...');
-      await rest.put(
-        Routes.applicationGuildCommands(CLIENT_ID, process.env.GUILD_ID),
-        { body: commandJSONs }
-      );
-    }
+    // Note: Only deploying global commands to avoid duplicates
+    // Guild-specific commands have been removed
     
     console.log(`✅ Successfully deployed ${data.length} commands!`);
     console.log('✨ Deployment complete!');
