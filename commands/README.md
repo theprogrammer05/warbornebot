@@ -27,14 +27,21 @@ export default {
 
 ### `/wb-reminder`
 **File:** `reminder.js`  
-**Purpose:** Set persistent reminders with custom mentions  
-**Permissions:** Everyone  
+**Purpose:** Manage persistent reminders with custom mentions  
+**Permissions:** Everyone (can only manage own reminders)  
+**Subcommands:**
+- `view` - Display all your active reminders (numbered)
+- `add` - Create a new reminder
+- `remove` - Remove a reminder by number (e.g., `/wb-reminder remove number:2`)
 **Features:**
 - Supports days, hours, minutes, seconds
 - Mention up to 3 users/roles
 - Optional @everyone mention
-- Cancel button for creator
 - Persists across bot restarts
+- Shows time remaining for each reminder
+- Sorted by trigger time (soonest first)
+- Private responses
+- Easy removal by number
 
 ### `/wb-faq`
 **File:** `faq.js`  
@@ -43,7 +50,7 @@ export default {
 - View: Everyone
 - Add/Edit/Delete: Administrators only
 **Subcommands:**
-- `view` - Display an FAQ entry
+- `view` - View all FAQ entries
 - `add` - Create a new FAQ entry
 - `edit` - Modify an existing FAQ entry
 - `delete` - Remove an FAQ entry

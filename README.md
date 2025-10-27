@@ -13,7 +13,7 @@ A Discord bot for the Warborne game community with automated scheduling, reminde
 ## Commands
 
 - `/wb-schedule` - Display today's game events
-- `/wb-reminder` - Set a reminder with custom time and mentions
+- `/wb-reminder` - Add, view, or remove reminders
 - `/wb-faq` - View, add, edit, or delete FAQ entries
 - `/wb-research` - View research information
 - `/wb-commands` - List all available commands

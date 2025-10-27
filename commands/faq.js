@@ -4,7 +4,7 @@
  * Purpose: Manage and display frequently asked questions
  * 
  * Subcommands:
- * - view: Display an FAQ entry (Everyone)
+ * - view: View all FAQ entries (Everyone)
  * - add: Create a new FAQ entry (Admins only)
  * - edit: Modify an existing FAQ entry (Admins only)
  * - delete: Remove an FAQ entry (Admins only)
@@ -16,7 +16,7 @@
  * - Persistent storage via faq.json
  * 
  * Example Usage:
- * /wb-faq view question:"How do I join?"
+ * /wb-faq view
  * /wb-faq add question:"What is the server IP?" answer:"play.example.com"
  * /wb-faq edit question:"How do I join?" new_answer:"Updated answer here"
  * /wb-faq delete question:"Outdated question"
@@ -49,9 +49,9 @@ export default {
   description: 'View or manage FAQs',
   options: [
     {
-      name: 'list',
+      name: 'view',
       type: 1,
-      description: 'List all FAQs',
+      description: 'View all FAQs',
     },
     {
       name: 'add',
@@ -147,8 +147,8 @@ export default {
     const sub = interaction.options.getSubcommand();
     const faqs = JSON.parse(fs.readFileSync(faqFile, 'utf8'));
     
-    // Handle list subcommand or no subcommand
-    if (sub === 'list' || !sub) {
+    // Handle view subcommand
+    if (sub === 'view') {
       return this.showFaqList(interaction);
     }
     
