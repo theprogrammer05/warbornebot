@@ -30,7 +30,6 @@ import { MessageFlags } from 'discord.js';
 import { updateGitHubFile } from '../utils/github.js';
 
 const scheduleFile = path.join(process.cwd(), 'schedule.json');
-
 const VALID_DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const ALL_DAYS = [...VALID_DAYS, 'Everyday'];
 
