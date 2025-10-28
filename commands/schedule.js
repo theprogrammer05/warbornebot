@@ -323,16 +323,9 @@ export default {
 
       // Handle day selection
       if (day === 'Everyday') {
-        // Add to Everyday section
-        if (!schedule.Everyday) schedule.Everyday = [];
+        const events = schedule.Everyday || [];
         
-        const newEvent = {
-          name: name,
-          times: times,
-          description: description
-        };
-        
-        schedule.Everyday.push(newEvent);
+        if (number < 1 || number > events.length) {
           return interaction.reply({
             content: `❌ Invalid event number. Must be between 1 and ${events.length}`,
             flags: MessageFlags.Ephemeral
