@@ -264,13 +264,57 @@ export default {
         schedule[day] = [];
       }
       
-      // Parse times if provided
-      const times = timesStr ? timesStr.split(',').map(t => t.trim()).filter(Boolean) : [];
+      // Helper function to validate and format time
+      const validateAndFormatTime = (timeStr) => {
+        // Try to match various time formats (12h or 24h)
+        const timeMatch = timeStr.trim().match(/^(1[0-2]|0?[1-9]):([0-5][0-9])\s*([ap]m)?$/i);
+        if (!timeMatch) return null;
+        
+        let [_, hours, minutes, period] = timeMatch;
+        hours = parseInt(hours, 10);
+        minutes = parseInt(minutes, 10);
+        
+        // Convert to 24h format for consistent storage
+        if (period) {
+          period = period.toLowerCase();
+          if (period === 'pm' && hours < 12) hours += 12;
+          if (period === 'am' && hours === 12) hours = 0;
+        }
+        
+        // Format back to 12h with AM/PM for display
+        let displayHours = hours % 12 || 12;
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        
+        return `${displayHours}:${minutes.toString().padStart(2, '0')} ${ampm}`;
+      };
+      
+      // Parse and validate times if provided
+      let times = [];
+      if (timesStr) {
+        const timeInputs = timesStr.split(',').map(t => t.trim()).filter(Boolean);
+        const invalidTimes = [];
+        
+        for (const timeInput of timeInputs) {
+          const formattedTime = validateAndFormatTime(timeInput);
+          if (formattedTime) {
+            times.push(formattedTime);
+          } else {
+            invalidTimes.push(timeInput);
+          }
+        }
+        
+        if (invalidTimes.length > 0) {
+          return interaction.reply({
+            content: `❌ **Invalid Time Format**\nThe following times are not in a valid format (use HH:MM AM/PM):\n${invalidTimes.join(', ')}\n\nExample: \`6:00 PM, 8:00 PM\``,
+            flags: MessageFlags.Ephemeral
+          });
+        }
+      }
       
       // Create event object
       const event = { name, description };
       if (times.length > 0) {
-        event.times = times;
+        event.times = [...new Set(times)]; // Remove duplicates
       }
       
       schedule[day].push(event);
