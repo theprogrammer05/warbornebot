@@ -7,6 +7,13 @@
         "6:00 PM",
         "8:00 PM"
       ]
+    },
+    {
+      "name": "Testing 30 min schedule reminder",
+      "description": "Testing description",
+      "times": [
+        "4:11 AM"
+      ]
     }
   ],
   "Sunday": [
