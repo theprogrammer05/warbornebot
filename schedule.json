@@ -41,6 +41,10 @@
       "times": [
         "10:00 AM"
       ]
+    },
+    {
+      "name": "Testing wed event",
+      "description": "abc"
     }
   ],
   "Thursday": [
