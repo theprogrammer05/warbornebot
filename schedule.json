@@ -14,6 +14,13 @@
       "times": [
         "3:20 AM"
       ]
+    },
+    {
+      "name": "test event",
+      "description": "test event desc",
+      "times": [
+        "3:28 AM"
+      ]
     }
   ],
   "Sunday": [
