@@ -145,34 +145,69 @@ export default {
         'Saturday': '🥩'     // Protein Event (meat/protein)
       };
 
-      const scheduleText = VALID_DAYS.map(day => {
+      // Function to split text into chunks that fit within Discord's 2000 character limit
+      const splitMessage = (text, maxLength = 2000) => {
+        const chunks = [];
+        while (text.length > 0) {
+          let chunk = text.substring(0, maxLength);
+          // Find the last newline within the chunk to avoid splitting messages in the middle of a line
+          const lastNewLine = chunk.lastIndexOf('\n');
+          if (lastNewLine > 0 && chunk.length > 1000) {
+            chunk = chunk.substring(0, lastNewLine);
+          }
+          chunks.push(chunk);
+          text = text.substring(chunk.length);
+        }
+        return chunks;
+      };
+
+      // Build the schedule in parts
+      const header = '📅 **Weekly Event Schedule**\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n';
+      const footer = '\n💡 *Use `/wb-schedule add` to add events*';
+      
+      // Build schedule text for each day
+      const daySections = [];
+      for (const day of VALID_DAYS) {
         const events = schedule[day] || [];
         const emoji = dayEmojis[day] || '📅';
         
-        if (events.length === 0) {
-          return `${emoji} **${day}**\n   • _No events scheduled_`;
-        }
+        let dayText = `${emoji} **${day}**\n`;
         
-        const eventList = events.map((event, i) => {
-          let eventText = `   **${i + 1}.** **Event:** ${event.name}`;
-          if (event.times && event.times.length > 0) {
-            eventText += `\n     **Time:** ${event.times.join(', ')} CST`;
-          }
-          if (event.description) {
-            eventText += `\n     **Description:** ${event.description}`;
-          }
-          return eventText;
-        }).join('\n\n');
-        return `${emoji} **${day}**\n${eventList}`;
-      }).join('\n\n') + '\n\n💡 *Use `/wb-schedule add` to add events*';
+        if (events.length === 0) {
+          dayText += '   • _No events scheduled_\n\n';
+        } else {
+          events.forEach((event, i) => {
+            dayText += `   **${i + 1}.** **Event:** ${event.name}\n`;
+            if (event.times?.length > 0) {
+              dayText += `     **Time:** ${event.times.join(', ')} CST\n`;
+            }
+            if (event.description) {
+              dayText += `     **Description:** ${event.description}\n`;
+            }
+            dayText += '\n';
+          });
+        }
+        daySections.push(dayText);
+      }
 
-      return interaction.reply({
-        content: 
-          `📅 **Weekly Event Schedule**\n` +
-          `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
-          scheduleText,
+      // Combine all parts and split into chunks
+      const fullMessage = header + daySections.join('\n') + footer;
+      const messageChunks = splitMessage(fullMessage);
+
+      // Send the first chunk as a reply
+      await interaction.reply({
+        content: messageChunks[0],
         flags: MessageFlags.Ephemeral
       });
+
+      // Send remaining chunks as follow-ups
+      for (let i = 1; i < messageChunks.length; i++) {
+        await interaction.followUp({
+          content: messageChunks[i],
+          flags: MessageFlags.Ephemeral
+        });
+      }
+      return;
     }
 
     // ---------- ADD ----------

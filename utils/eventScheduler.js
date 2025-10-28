@@ -36,7 +36,7 @@ export function initializeEventScheduler(client) {
         const cronExpression = `0 ${minute} ${hour} * * ${dayOfWeek}`;
         
         // Schedule the reminder
-        event.job = schedule(cronExpression, () => {
+        event.job = cron.schedule(cronExpression, () => {
           sendEventReminder(client, day, event, time);
         });
       });
