@@ -181,6 +181,28 @@ export default {
       
       // Build schedule text for each day
       const daySections = [];
+      
+      // Add Everyday section first
+      const everydayEvents = schedule.Everyday || [];
+      let everydayText = '🌟 **Everyday (Daily)**\n';
+      
+      if (everydayEvents.length === 0) {
+        everydayText += '   • _No daily events scheduled_\n\n';
+      } else {
+        everydayEvents.forEach((event, i) => {
+          everydayText += `   **${i + 1}.** **Event:** ${event.name}\n`;
+          if (event.times?.length > 0) {
+            everydayText += `     **Time:** ${event.times.join(', ')} CST\n`;
+          }
+          if (event.description) {
+            everydayText += `     **Description:** ${event.description}\n`;
+          }
+          everydayText += '\n';
+        });
+      }
+      daySections.push(everydayText);
+      
+      // Add regular days
       for (const day of VALID_DAYS) {
         const events = schedule[day] || [];
         const emoji = dayEmojis[day] || '📅';
