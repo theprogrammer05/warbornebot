@@ -1,6 +1,12 @@
 [build]
-# Ignore JSON data files - they're runtime data, not code
-watchPaths = ["**/*.js", "package.json", "package-lock.json"]
+# Only watch these paths for changes - excludes JSON data files
+watchPaths = [
+  "**/*.js",
+  "package.json",
+  "package-lock.json",
+  "railway.toml",
+  ".env"
+]
 
-[build.watchIgnore]
-paths = ["reminders.json", "faq.json", "schedule.json"]
+[deploy]
+restartPolicyType = "ON_FAILURE"

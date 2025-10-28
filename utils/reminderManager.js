@@ -17,12 +17,10 @@ function loadReminders() {
   }
 }
 
-// Save reminders to file and sync to GitHub immediately
 async function saveReminders(reminders) {
-  // Save to local file immediately
   fs.writeFileSync(remindersFile, JSON.stringify(reminders, null, 2));
   
-  // Sync to GitHub immediately (non-blocking)
+  // Sync to GitHub for data backup
   updateGitHubFile('reminders.json', reminders, 'Update reminders via Discord bot')
     .catch(err => console.error('⚠️ GitHub sync failed (non-critical):', err));
 }
