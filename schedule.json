@@ -1,23 +1,86 @@
 {
   "Sunday": [
-    "Double Scrap Post"
+    {
+      "name": "Double Scrap Post",
+      "description": "Double the scrap from all sources today!",
+      "times": []
+    },
+    {
+      "name": "WAR TIME",
+      "description": "Join your faction for coordinated PvP battles!",
+      "times": ["6:00 PM", "8:00 PM"]
+    }
   ],
   "Monday": [
-    "100% Harvest Vault Experience & Chest Rewards"
+    {
+      "name": "100% Harvest Vault Experience & Chest Rewards",
+      "description": "Double experience and better loot from Harvest Vaults!",
+      "times": []
+    },
+    {
+      "name": "WAR TIME",
+      "description": "Join your faction for coordinated PvP battles!",
+      "times": ["6:00 PM", "8:00 PM"]
+    }
   ],
   "Tuesday": [
-    "Exergy Event (10:30 AM, 3:30 PM, & 9:30 PM CST)"
+    {
+      "name": "Exergy Event",
+      "description": "Special energy-based event with exclusive rewards!",
+      "times": ["10:30 AM", "3:30 PM", "9:30 PM"]
+    },
+    {
+      "name": "WAR TIME",
+      "description": "Join your faction for coordinated PvP battles!",
+      "times": ["6:00 PM", "8:00 PM"]
+    }
   ],
   "Wednesday": [
-    "50% Experience (Do highest Trial before 10:00 AM CST!)"
+    {
+      "name": "50% Experience",
+      "description": "50% bonus experience on all activities. Don't forget to do your highest Trial first!",
+      "times": ["10:00 AM"]
+    },
+    {
+      "name": "WAR TIME",
+      "description": "Join your faction for coordinated PvP battles!",
+      "times": ["6:00 PM", "8:00 PM"]
+    }
   ],
   "Thursday": [
-    "Radiation Storm. Whatever that means."
+    {
+      "name": "Radiation Storm",
+      "description": "Increased radiation levels alter the wasteland. Special conditions apply!",
+      "times": []
+    },
+    {
+      "name": "WAR TIME",
+      "description": "Join your faction for coordinated PvP battles!",
+      "times": ["6:00 PM", "8:00 PM"]
+    }
   ],
   "Friday": [
-    "Faction Contribution from PVP increased by 25%."
+    {
+      "name": "Faction PVP Bonus",
+      "description": "25% increased Faction Contribution from PVP activities.",
+      "times": []
+    },
+    {
+      "name": "WAR TIME",
+      "description": "Join your faction for coordinated PvP battles!",
+      "times": ["6:00 PM", "8:00 PM"]
+    }
   ],
   "Saturday": [
-    "Protein Event!"
+    {
+      "name": "Protein Event!",
+      "description": "Increased protein drops and benefits from all sources!",
+      "times": []
+    },
+    {
+      "name": "WAR TIME",
+      "description": "Join your faction for coordinated PvP battles!",
+      "times": ["6:00 PM", "8:00 PM"]
+    }
   ]
 }

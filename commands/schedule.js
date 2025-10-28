@@ -88,10 +88,22 @@ export default {
           choices: VALID_DAYS.map(day => ({ name: day, value: day })),
         },
         {
-          name: 'event',
+          name: 'name',
           type: 3, // STRING
-          description: 'Event description',
+          description: 'Name of the event',
           required: true,
+        },
+        {
+          name: 'description',
+          type: 3, // STRING
+          description: 'Description of the event',
+          required: true,
+        },
+        {
+          name: 'times',
+          type: 3, // STRING
+          description: 'Event times in CST (comma separated, e.g., "6:00 PM, 8:00 PM")',
+          required: false,
         },
       ],
     },
@@ -141,7 +153,16 @@ export default {
           return `${emoji} **${day}**\n   • _No events scheduled_`;
         }
         
-        const eventList = events.map((event, i) => `   **${i + 1}.** ${event}`).join('\n');
+        const eventList = events.map((event, i) => {
+          let eventText = `   **${i + 1}.** **Event:** ${event.name}`;
+          if (event.times && event.times.length > 0) {
+            eventText += `\n     **Time:** ${event.times.join(', ')} CST`;
+          }
+          if (event.description) {
+            eventText += `\n     **Description:** ${event.description}`;
+          }
+          return eventText;
+        }).join('\n\n');
         return `${emoji} **${day}**\n${eventList}`;
       }).join('\n\n') + '\n\n💡 *Use `/wb-schedule add` to add events*';
 
@@ -164,23 +185,42 @@ export default {
       }
 
       const day = interaction.options.getString('day');
-      const event = interaction.options.getString('event');
-
+      const name = interaction.options.getString('name');
+      const description = interaction.options.getString('description');
+      const timesStr = interaction.options.getString('times');
+      
       if (!schedule[day]) {
         schedule[day] = [];
+      }
+      
+      // Parse times if provided
+      const times = timesStr ? timesStr.split(',').map(t => t.trim()).filter(Boolean) : [];
+      
+      // Create event object
+      const event = { name, description };
+      if (times.length > 0) {
+        event.times = times;
       }
       
       schedule[day].push(event);
       fs.writeFileSync(scheduleFile, JSON.stringify(schedule, null, 2));
       await updateGitHubFile('schedule.json', schedule, `Add event to ${day}`);
 
+      let response = 
+        `✅ **Event Added Successfully!**\n` +
+        `━━━━━━━━━━━━━━━━━━━━\n` +
+        `📅 **${day}**\n` +
+        `📝 **Event:** ${name}\n`;
+        
+      if (times.length > 0) {
+        response += `⏰ **Times:** ${times.join(', ')}\n`;
+      }
+      
+      response += `📋 **Description:** ${description}\n\n`;
+      response += `The schedule has been updated.`;
+
       return interaction.reply({
-        content: 
-          `✅ **Event Added Successfully!**\n` +
-          `━━━━━━━━━━━━━━━━━━━━\n` +
-          `📅 **${day}**\n` +
-          `📝 **Event:** ${event}\n\n` +
-          `The schedule has been updated.`,
+        content: response,
         flags: MessageFlags.Ephemeral
       });
     }
@@ -218,12 +258,20 @@ export default {
       fs.writeFileSync(scheduleFile, JSON.stringify(schedule, null, 2));
       await updateGitHubFile('schedule.json', schedule, `Remove event from ${day}`);
 
+      let response = 
+        `✅ **Event Removed Successfully!**\n` +
+        `━━━━━━━━━━━━━━━━━━━━━━━\n` +
+        `🗑️ Removed from **${day}**:\n` +
+        `📝 **Event:** ${removedEvent.name}\n`;
+        
+      if (removedEvent.times && removedEvent.times.length > 0) {
+        response += `⏰ **Was scheduled at:** ${removedEvent.times.join(', ')} CST\n`;
+      }
+      
+      response += `\nThe schedule has been updated.`;
+
       return interaction.reply({
-        content: 
-          `✅ **Event Removed Successfully!**\n` +
-          `━━━━━━━━━━━━━━━━━━━━━━━\n` +
-          `🗑️ Removed event #${number} from **${day}**\n\n` +
-          `The schedule has been updated.`,
+        content: response,
         flags: MessageFlags.Ephemeral
       });
     }

@@ -3,6 +3,7 @@ import path from 'path';
 import { Client, GatewayIntentBits, REST, Routes, MessageFlags } from 'discord.js';
 import dotenv from 'dotenv';
 import { initializeReminders } from './utils/reminderManager.js';
+import { initializeEventScheduler } from './utils/eventScheduler.js';
 dotenv.config();
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
@@ -152,6 +153,9 @@ client.once('clientReady', async () => {
 
     // Initialize reminder system
     initializeReminders(client);
+    
+    // Initialize event scheduler
+    initializeEventScheduler(client);
 
     const scheduleFile = path.join(process.cwd(), 'schedule.json');
     if (!fs.existsSync(scheduleFile)) {
@@ -206,19 +210,40 @@ client.once('clientReady', async () => {
       if (todayEvents.length === 0) {
         message += '   • _No events scheduled_';
       } else {
-        message += todayEvents.map((event, i) => `   **${i + 1}.** ${event}`).join('\n');
+        message += todayEvents.map((event, i) => {
+          let eventText = `   **${i + 1}.** **Event:** ${event.name}`;
+          if (event.times && event.times.length > 0) {
+            eventText += `\n     **Time:** ${event.times.join(', ')} CST`;
+          }
+          if (event.description) {
+            eventText += `\n     **Description:** ${event.description}`;
+          }
+          return eventText;
+        }).join('\n\n');
       }
 
       // Format tomorrow's events
       if (tomorrowEvents.length > 0) {
         message += `\n\n${dayEmojis[tomorrow] || '📅'} **Tomorrow (${tomorrow}):**\n`;
-        message += tomorrowEvents.map((event, i) => `   **${i + 1}.** ${event}`).join('\n');
+        message += tomorrowEvents.map((event, i) => {
+          let eventText = `   **${i + 1}.** **Event:** ${event.name}`;
+          if (event.times && event.times.length > 0) {
+            eventText += `\n     **Time:** ${event.times.join(', ')} CST`;
+          }
+          if (event.description) {
+            eventText += `\n     **Description:** ${event.description}`;
+          }
+          return eventText;
+        }).join('\n\n');
       }
 
       message += `\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n💡 *Use \`/wb-schedule view\` to see the full week!*`;
 
       await channel.send(message);
       console.log(`✅ Posted schedule for ${today} (Central Time)`);
+      
+      // Initialize event scheduler after posting the daily schedule
+      initializeEventScheduler(client);
     } catch (err) {
       console.error('❌ Error posting schedule:', err);
     }
