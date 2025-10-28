@@ -72,7 +72,10 @@ export default {
       }
 
       embed.setFooter({ text: '💡 Select a specific research type to see tier details' });
-      return interaction.reply({ embeds: [embed] });
+      return interaction.reply({ 
+        embeds: [embed],
+        flags: MessageFlags.Ephemeral
+      });
     }
 
     // Show specific category details
@@ -117,6 +120,9 @@ export default {
 
       embed.setFooter({ text: '💡 Plan your research upgrades wisely!' });
 
-      return interaction.reply({ embeds: [embed] });
+      return interaction.reply({ 
+        embeds: [embed],
+        flags: MessageFlags.Ephemeral
+      });
   }
 };

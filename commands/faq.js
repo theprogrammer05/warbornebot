@@ -87,7 +87,7 @@ export default {
     const reply = await interaction.reply({
       content: getContent(page),
       components: [row],
-      ephemeral: false,
+      flags: MessageFlags.Ephemeral,
       fetchReply: true,
     });
 
@@ -141,6 +141,7 @@ export default {
           `💬 **Question:** ${question}\n` +
           `➡️ **Answer:** ${answer}\n` +
           `🔢 **FAQ #${faqs.length}**`,
+        flags: MessageFlags.Ephemeral
       });
     }
 
@@ -159,6 +160,7 @@ export default {
           `━━━━━━━━━━━━━━━━━━━━━━━\n` +
           `💬 **Question:** ${removed.question}\n` +
           `➡️ **Answer:** ${removed.answer}`,
+        flags: MessageFlags.Ephemeral
       });
     }
   },

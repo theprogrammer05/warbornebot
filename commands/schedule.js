@@ -9,7 +9,7 @@ import fs from 'fs';
 import path from 'path';
 import { MessageFlags } from 'discord.js';
 import { updateGitHubFile } from '../utils/github.js';
-import { validateAndFormatTime } from '../utils/timeUtils.js';
+import { validateAndFormatTime, parseTimeString, getCentralTime } from '../utils/timeUtils.js';
 
 const scheduleFile = path.join(process.cwd(), 'schedule.json');
 const VALID_DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -135,13 +135,68 @@ export default {
         'Saturday': '🥩'
       };
 
+      const getTimeLeft = (timeStr, day) => {
+        const [hours, minutes] = parseTimeString(timeStr);
+        if (hours === null) return '';
+        
+        const now = getCentralTime();
+        const currentDay = now.getDay(); // 0=Sunday, 1=Monday, etc.
+        
+        // Create target date
+        let targetDate = new Date(now);
+        targetDate.setHours(hours, minutes, 0, 0);
+        
+        // For Everyday events
+        if (day === 'Everyday (Daily)') {
+          // If time already passed today, set to tomorrow
+          if (targetDate <= now) {
+            targetDate.setDate(targetDate.getDate() + 1);
+          }
+        } else {
+          // For specific day events
+          const targetDay = VALID_DAYS.indexOf(day);
+          let daysUntil = targetDay - currentDay;
+          
+          // If day already passed this week, or same day but time passed
+          if (daysUntil < 0 || (daysUntil === 0 && targetDate <= now)) {
+            daysUntil += 7;
+          }
+          
+          targetDate.setDate(targetDate.getDate() + daysUntil);
+        }
+        
+        const msLeft = targetDate - now;
+        const hoursLeft = Math.floor(msLeft / (1000 * 60 * 60));
+        const minutesLeft = Math.floor((msLeft % (1000 * 60 * 60)) / (1000 * 60));
+        
+        if (hoursLeft >= 24) {
+          const daysLeft = Math.floor(hoursLeft / 24);
+          const remainingHours = hoursLeft % 24;
+          return remainingHours > 0 
+            ? `in ${daysLeft}d ${remainingHours}h` 
+            : `in ${daysLeft}d`;
+        } else if (hoursLeft > 0) {
+          return minutesLeft > 0 
+            ? `in ${hoursLeft}h ${minutesLeft}m` 
+            : `in ${hoursLeft}h`;
+        } else {
+          return `in ${minutesLeft}m`;
+        }
+      };
+
       const formatEvents = (events, day, emoji) => {
         if (!events.length) return `\n${emoji} **${day}**\n   • _No events scheduled_`;
         
         let text = `\n${emoji} **${day}**`;
         events.forEach((event, i) => {
           text += `\n   **${i + 1}.** **Event:** ${event.name}`;
-          if (event.times?.length > 0) text += `\n     **Time:** ${event.times.join(', ')} CST`;
+          if (event.times?.length > 0) {
+            const timesWithCountdown = event.times.map(time => {
+              const countdown = getTimeLeft(time, day);
+              return countdown ? `${time} _(${countdown})_` : time;
+            });
+            text += `\n     **Time:** ${timesWithCountdown.join(', ')} CST`;
+          }
           if (event.description) text += `\n     **Description:** ${event.description}`;
         });
         return text;

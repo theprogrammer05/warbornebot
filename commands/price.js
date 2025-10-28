@@ -78,6 +78,7 @@ export default {
           `   • **Market Value:** ${formattedMarket} 🔴 Solarbite _(after 6% market cut)_\n\n` +
           `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
           `💡 *Sell above market value to profit!*`,
+        flags: MessageFlags.Ephemeral
       });
     } catch (error) {
       console.error('Error in price calculation:', error);

@@ -272,8 +272,7 @@ export default {
         embed.addFields({
           name: `${index + 1}. ${reminder.description}`,
           value: 
-            `⏱️ **In:** ${timeString}\n` +
-            `📅 **When:** ${formattedTime}\n` +
+            `📅 **When:** ${formattedTime} _(${timeString})_\n` +
             `👤 **Mentions:** ${mentionDisplay}`,
           inline: false
         });
