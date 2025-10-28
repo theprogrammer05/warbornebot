@@ -80,17 +80,17 @@ export default {
   options: [
     {
       name: 'view',
-      type: 1,
+      type: 'SUB_COMMAND',
       description: 'View the weekly schedule',
     },
     {
       name: 'add',
-      type: 1,
+      type: 'SUB_COMMAND',
       description: 'Add an event to a specific day or Everyday section',
       options: [
         {
           name: 'day',
-          type: 3, // STRING
+          type: 'STRING',
           description: 'Day of the week or "Everyday" for daily events',
           required: true,
           choices: ALL_DAYS.map(day => ({
@@ -100,19 +100,19 @@ export default {
         },
         {
           name: 'name',
-          type: 3, // STRING
+          type: 'STRING',
           description: 'Name of the event',
           required: true,
         },
         {
           name: 'description',
-          type: 3, // STRING
+          type: 'STRING',
           description: 'Description of the event',
           required: true,
         },
         {
           name: 'times',
-          type: 3, // STRING
+          type: 'STRING',
           description: 'Event times in CST (comma separated, e.g., "6:00 PM, 8:00 PM")',
           required: false,
         },
@@ -120,12 +120,12 @@ export default {
     },
     {
       name: 'remove',
-      type: 1,
+      type: 'SUB_COMMAND',
       description: 'Remove an event from a specific day or Everyday section',
       options: [
         {
           name: 'day',
-          type: 3, // STRING
+          type: 'STRING',
           description: 'Day of the week or "Everyday" for daily events',
           required: true,
           choices: ALL_DAYS.map(day => ({
@@ -135,7 +135,7 @@ export default {
         },
         {
           name: 'number',
-          type: 4, // INTEGER
+          type: 'INTEGER',
           description: 'Event number to remove (see /wb-schedule view)',
           required: true,
         },
