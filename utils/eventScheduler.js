@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { scheduleJob } from 'node-schedule';
+import { schedule } from 'node-cron';
 
 const scheduleFile = path.join(process.cwd(), 'schedule.json');
 
@@ -26,21 +26,19 @@ export function initializeEventScheduler(client) {
         const [hours, minutes] = parseTimeString(time);
         if (hours === null || minutes === null) return;
         
-        const reminderTime = new Date();
-        reminderTime.setHours(hours);
-        reminderTime.setMinutes(minutes - 30);
-        reminderTime.setSeconds(0);
+        // Calculate day of week (0-6, where 0 is Sunday)
+        const dayOfWeek = getDayIndex(day);
         
-        // If the reminder time has already passed today, schedule for next week
-        if (reminderTime < new Date()) {
-          reminderTime.setDate(reminderTime.getDate() + 7);
-        }
+        // Format cron expression: seconds(0) minutes hours dayOfMonth month dayOfWeek
+        // We'll schedule it to run every week on the specified day
+        const minute = minutes;
+        const hour = hours;
+        const cronExpression = `0 ${minute} ${hour} * * ${dayOfWeek}`;
         
         // Schedule the reminder
-        event.job = scheduleJob(
-          { hour: reminderTime.getHours(), minute: reminderTime.getMinutes(), dayOfWeek: getDayIndex(day) },
-          () => sendEventReminder(client, day, event, time)
-        );
+        event.job = schedule(cronExpression, () => {
+          sendEventReminder(client, day, event, time);
+        });
       });
     });
   });
