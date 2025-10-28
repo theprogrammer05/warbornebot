@@ -1,30 +1,3 @@
-/**
- * FAQ COMMAND
- * 
- * Purpose: Manage and display frequently asked questions
- * 
- * Subcommands:
- * - view: View all FAQ entries (Everyone)
- * - add: Create a new FAQ entry (Admins only)
- * - edit: Modify an existing FAQ entry (Admins only)
- * - delete: Remove an FAQ entry (Admins only)
- * 
- * Features:
- * - Paginated FAQ list with navigation buttons
- * - Rich embeds for better readability
- * - Admin-only modification commands
- * - Persistent storage via faq.json
- * 
- * Example Usage:
- * /wb-faq view
- * /wb-faq add question:"What is the server IP?" answer:"play.example.com"
- * /wb-faq edit question:"How do I join?" new_answer:"Updated answer here"
- * /wb-faq delete question:"Outdated question"
- * 
- * Permissions: View (Everyone), Add/Edit/Delete (Administrators)
- * Data Storage: faq.json (synced to GitHub)
- */
-
 import fs from 'fs';
 import path from 'path';
 import Discord, { MessageFlags } from 'discord.js';

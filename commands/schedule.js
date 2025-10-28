@@ -1,59 +1,36 @@
 /**
- * SCHEDULE COMMAND
- * 
- * Purpose: Display today's game events and manage the weekly schedule (responses are private)
- * 
- * Subcommands:
- * - today: Show today's events (Everyone)
- * - view: View schedule for a specific day (Everyone)
- * - set: Set events for a specific day (Admins only)
- * 
- * Features:
- * - Automatically detects current day (CST timezone)
- * - Rich embed formatting
- * - Admin-only schedule modification
- * - Persistent storage via schedule.json
- * - Automatic daily posting at midnight CST
- * 
- * Example Usage:
- * /wb-schedule today
- * /wb-schedule view day:"Monday"
- * /wb-schedule set day:"Monday" events:"100% Harvest Vault Experience & Chest Rewards"
- * 
- * Permissions: View (Everyone), Set (Administrators)
- * Data Storage: schedule.json (synced to GitHub)
+ * Schedule Command
+ * Manages weekly event schedules with CST times. Events trigger 30-minute reminders
+ * and notifications at the specified time. Supports daily "Everyday" events and
+ * day-specific events. Admin-only modifications with GitHub sync.
  */
 
 import fs from 'fs';
 import path from 'path';
 import { MessageFlags } from 'discord.js';
 import { updateGitHubFile } from '../utils/github.js';
+import { validateAndFormatTime } from '../utils/timeUtils.js';
 
 const scheduleFile = path.join(process.cwd(), 'schedule.json');
 const VALID_DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const ALL_DAYS = [...VALID_DAYS, 'Everyday'];
 
-// Initialize schedule.json with all days if it doesn't exist or is in old format
 function initializeSchedule() {
   if (!fs.existsSync(scheduleFile)) {
-    const emptySchedule = {};
+    const emptySchedule = { Everyday: [] };
     VALID_DAYS.forEach(day => emptySchedule[day] = []);
     fs.writeFileSync(scheduleFile, JSON.stringify(emptySchedule, null, 2));
     return emptySchedule;
   }
   
   const schedule = JSON.parse(fs.readFileSync(scheduleFile, 'utf8'));
-  
-  // Migrate old format (string values) to new format (array values)
   let needsMigration = false;
   
-  // Ensure Everyday section exists
   if (!schedule.Everyday) {
     schedule.Everyday = [];
     needsMigration = true;
   }
   
-  // Handle regular days
   VALID_DAYS.forEach(day => {
     if (!schedule[day]) {
       schedule[day] = [];
@@ -71,27 +48,26 @@ function initializeSchedule() {
   return schedule;
 }
 
-// Initialize on load
 initializeSchedule();
 
 export default {
   name: 'wb-schedule',
-  description: 'View or manage the weekly schedule',
+  description: 'View or manage the weekly event schedule',
   options: [
     {
       name: 'view',
-      type: 1, // SUB_COMMAND
+      type: 1,
       description: 'View the weekly schedule',
       options: []
     },
     {
       name: 'add',
-      type: 1, // SUB_COMMAND
+      type: 1,
       description: 'Add an event to a specific day or Everyday section',
       options: [
         {
           name: 'day',
-          type: 3, // STRING
+          type: 3,
           description: 'Day of the week or "Everyday" for daily events',
           required: true,
           choices: ALL_DAYS.map(day => ({
@@ -101,19 +77,19 @@ export default {
         },
         {
           name: 'name',
-          type: 3, // STRING
+          type: 3,
           description: 'Name of the event',
           required: true,
         },
         {
           name: 'description',
-          type: 3, // STRING
+          type: 3,
           description: 'Description of the event',
           required: true,
         },
         {
           name: 'times',
-          type: 3, // STRING
+          type: 3,
           description: 'Event times in CST (comma separated, e.g., "6:00 PM, 8:00 PM")',
           required: false,
         },
@@ -121,12 +97,12 @@ export default {
     },
     {
       name: 'remove',
-      type: 1, // SUB_COMMAND
+      type: 1,
       description: 'Remove an event from a specific day or Everyday section',
       options: [
         {
           name: 'day',
-          type: 3, // STRING
+          type: 3,
           description: 'Day of the week or "Everyday" for daily events',
           required: true,
           choices: ALL_DAYS.map(day => ({
@@ -136,7 +112,7 @@ export default {
         },
         {
           name: 'number',
-          type: 4, // INTEGER
+          type: 4,
           description: 'Event number to remove (see /wb-schedule view)',
           required: true,
         },
@@ -148,104 +124,44 @@ export default {
     const sub = interaction.options.getSubcommand();
     const schedule = JSON.parse(fs.readFileSync(scheduleFile, 'utf8'));
 
-    // ---------- VIEW ----------
     if (sub === 'view' || !sub) {
       const dayEmojis = {
-        'Sunday': '♻️',      // Double Scrap Post (recycling/scrap)
-        'Monday': '🏆',      // 100% Harvest Vault Experience & Chest Rewards
-        'Tuesday': '⚡',     // Exergy Event (energy)
-        'Wednesday': '📈',   // 50% Experience (growth/leveling up)
-        'Thursday': '☢️',    // Radiation Storm
-        'Friday': '⚔️',      // Faction Contribution from PVP (combat)
-        'Saturday': '🥩'     // Protein Event (meat/protein)
+        'Sunday': '♻️',
+        'Monday': '🏆',
+        'Tuesday': '⚡',
+        'Wednesday': '📈',
+        'Thursday': '☢️',
+        'Friday': '⚔️',
+        'Saturday': '🥩'
       };
 
-      // Function to split text into chunks that fit within Discord's 2000 character limit
-      const splitMessage = (text, maxLength = 2000) => {
-        const chunks = [];
-        while (text.length > 0) {
-          let chunk = text.substring(0, maxLength);
-          // Find the last newline within the chunk to avoid splitting messages in the middle of a line
-          const lastNewLine = chunk.lastIndexOf('\n');
-          if (lastNewLine > 0 && chunk.length > 1000) {
-            chunk = chunk.substring(0, lastNewLine);
-          }
-          chunks.push(chunk);
-          text = text.substring(chunk.length);
-        }
-        return chunks;
-      };
-
-      // Build the schedule in parts
-      const header = '📅 **Weekly Event Schedule**\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n';
-      const footer = '\n💡 *Use `/wb-schedule add` to add events*';
-      
-      // Build schedule text for each day
-      const daySections = [];
-      
-      // Add Everyday section first
-      const everydayEvents = schedule.Everyday || [];
-      let everydayText = '🌟 **Everyday (Daily)**';
-      
-      if (everydayEvents.length === 0) {
-        everydayText += '\n   • _No daily events scheduled_';
-      } else {
-        everydayEvents.forEach((event, i) => {
-          everydayText += `\n   **${i + 1}.** **Event:** ${event.name}`;
-          if (event.times?.length > 0) {
-            everydayText += `\n     **Time:** ${event.times.join(', ')} CST`;
-          }
-          if (event.description) {
-            everydayText += `\n     **Description:** ${event.description}`;
-          }
+      const formatEvents = (events, day, emoji) => {
+        if (!events.length) return `\n${emoji} **${day}**\n   • _No events scheduled_`;
+        
+        let text = `\n${emoji} **${day}**`;
+        events.forEach((event, i) => {
+          text += `\n   **${i + 1}.** **Event:** ${event.name}`;
+          if (event.times?.length > 0) text += `\n     **Time:** ${event.times.join(', ')} CST`;
+          if (event.description) text += `\n     **Description:** ${event.description}`;
         });
-      }
-      daySections.push(everydayText);
+        return text;
+      };
+
+      let message = '📅 **Weekly Event Schedule**\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n';
+      message += formatEvents(schedule.Everyday || [], 'Everyday (Daily)', '🌟');
       
-      // Add regular days
-      for (const day of VALID_DAYS) {
-        const events = schedule[day] || [];
-        const emoji = dayEmojis[day] || '📅';
-        
-        let dayText = `\n${emoji} **${day}**`;
-        
-        if (events.length === 0) {
-          dayText += '\n   • _No events scheduled_';
-        } else {
-          events.forEach((event, i) => {
-            dayText += `\n   **${i + 1}.** **Event:** ${event.name}`;
-            if (event.times?.length > 0) {
-              dayText += `\n     **Time:** ${event.times.join(', ')} CST`;
-            }
-            if (event.description) {
-              dayText += `\n     **Description:** ${event.description}`;
-            }
-          });
-        }
-        daySections.push(dayText);
-      }
+      VALID_DAYS.forEach(day => {
+        message += formatEvents(schedule[day] || [], day, dayEmojis[day] || '📅');
+      });
+      
+      message += '\n\n💡 *Use `/wb-schedule add` to add events*';
 
-      // Combine all parts and split into chunks
-      const fullMessage = header + daySections.join('\n') + footer;
-      const messageChunks = splitMessage(fullMessage);
-
-      // Send the first chunk as a reply
-      await interaction.reply({
-        content: messageChunks[0],
+      return interaction.reply({
+        content: message,
         flags: MessageFlags.Ephemeral
       });
-
-      // Send remaining chunks as follow-ups
-      for (let i = 1; i < messageChunks.length; i++) {
-        await interaction.followUp({
-          content: messageChunks[i],
-          flags: MessageFlags.Ephemeral
-        });
-      }
-      return;
     }
 
-    // ---------- ADD ----------
     if (sub === 'add') {
       if (!interaction.member.permissions.has('ADMINISTRATOR')) {
         return interaction.reply({
@@ -259,35 +175,8 @@ export default {
       const description = interaction.options.getString('description');
       const timesStr = interaction.options.getString('times');
       
-      if (!schedule[day]) {
-        schedule[day] = [];
-      }
+      if (!schedule[day]) schedule[day] = [];
       
-      // Helper function to validate and format time
-      const validateAndFormatTime = (timeStr) => {
-        // Try to match various time formats (12h or 24h)
-        const timeMatch = timeStr.trim().match(/^(1[0-2]|0?[1-9]):([0-5][0-9])\s*([ap]m)?$/i);
-        if (!timeMatch) return null;
-        
-        let [_, hours, minutes, period] = timeMatch;
-        hours = parseInt(hours, 10);
-        minutes = parseInt(minutes, 10);
-        
-        // Convert to 24h format for consistent storage
-        if (period) {
-          period = period.toLowerCase();
-          if (period === 'pm' && hours < 12) hours += 12;
-          if (period === 'am' && hours === 12) hours = 0;
-        }
-        
-        // Format back to 12h with AM/PM for display
-        let displayHours = hours % 12 || 12;
-        const ampm = hours >= 12 ? 'PM' : 'AM';
-        
-        return `${displayHours}:${minutes.toString().padStart(2, '0')} ${ampm}`;
-      };
-      
-      // Parse and validate times if provided
       let times = [];
       if (timesStr) {
         const timeInputs = timesStr.split(',').map(t => t.trim()).filter(Boolean);
@@ -310,17 +199,13 @@ export default {
         }
       }
       
-      // Create event object
       const event = { name, description };
-      if (times.length > 0) {
-        event.times = [...new Set(times)]; // Remove duplicates
-      }
+      if (times.length > 0) event.times = [...new Set(times)];
       
       schedule[day].push(event);
       fs.writeFileSync(scheduleFile, JSON.stringify(schedule, null, 2));
       await updateGitHubFile('schedule.json', schedule, `Add event to ${day}`);
       
-      // Reinitialize the scheduler to pick up the new event
       const { initializeEventScheduler } = await import('../utils/eventScheduler.js');
       initializeEventScheduler(interaction.client);
 
@@ -343,7 +228,6 @@ export default {
       });
     }
 
-    // ---------- REMOVE ----------
     if (sub === 'remove') {
       if (!interaction.member.permissions.has('ADMINISTRATOR')) {
         return interaction.reply({
@@ -354,90 +238,19 @@ export default {
 
       const day = interaction.options.getString('day');
       const number = interaction.options.getInteger('number');
+      const events = schedule[day] || [];
 
-      // Ensure the day exists in the schedule
-      if (!ALL_DAYS.includes(day)) {
-        if (day === 'Everyday') {
-          // Handle 'Everyday' section
-          const events = schedule.Everyday || [];
-          if (number < 1 || number > events.length) {
-            return interaction.reply({
-              content: `❌ Invalid event number. Must be between 1 and ${events.length}`,
-              flags: MessageFlags.Ephemeral
-            });
-          }
-
-          const removedEvent = events.splice(number - 1, 1)[0];
-          fs.writeFileSync(scheduleFile, JSON.stringify(schedule, null, 2));
-          await updateGitHubFile('schedule.json', schedule, `Remove event from Everyday`);
-
-          let response = 
-            `✅ **Event Removed Successfully!**\n` +
-            `━━━━━━━━━━━━━━━━━━━━━━━\n` +
-            `🗑️ Removed from **Everyday**:\n` +
-            `📝 **Event:** ${removedEvent.name}\n`;
-            
-          if (removedEvent.times && removedEvent.times.length > 0) {
-            response += `⏰ **Was scheduled at:** ${removedEvent.times.join(', ')} CST\n`;
-          }
-          
-          response += `\nThe schedule has been updated.`;
-
-          return interaction.reply({
-            content: response,
-            flags: MessageFlags.Ephemeral
-          });
-        }
-      }
-
-      // Handle day selection
-      if (day === 'Everyday') {
-        const events = schedule.Everyday || [];
-        
-        if (number < 1 || number > events.length) {
-          return interaction.reply({
-            content: `❌ Invalid event number. Must be between 1 and ${events.length}`,
-            flags: MessageFlags.Ephemeral
-          });
-        }
-
-        const removedEvent = events.splice(number - 1, 1)[0];
-        fs.writeFileSync(scheduleFile, JSON.stringify(schedule, null, 2));
-        await updateGitHubFile('schedule.json', schedule, `Remove event from Everyday`);
-
-        let response = 
-          `✅ **Event Removed Successfully!**\n` +
-          `━━━━━━━━━━━━━━━━━━━━━━━\n` +
-          `🗑️ Removed from **Everyday**:\n` +
-          `📝 **Event:** ${removedEvent.name}\n`;
-          
-        if (removedEvent.times && removedEvent.times.length > 0) {
-          response += `⏰ **Was scheduled at:** ${removedEvent.times.join(', ')} CST\n`;
-        }
-        
-        response += `\nThe schedule has been updated.`;
-
+      if (number < 1 || number > events.length) {
         return interaction.reply({
-          content: response,
+          content: `❌ Invalid event number. Must be between 1 and ${events.length}`,
           flags: MessageFlags.Ephemeral
         });
       }
 
-      if (number < 1 || number > schedule[day].length) {
-        return interaction.reply({
-          content: `❌ **Invalid Event Number**\n` +
-            `📅 **${day}** has **${schedule[day].length}** event(s).\n` +
-            `Please choose a number between 1 and ${schedule[day].length}.`,
-          flags: MessageFlags.Ephemeral
-        });
-      }
-
-      // Remove the event
-      schedule[day].splice(eventIndex, 1);
+      const removedEvent = events.splice(number - 1, 1)[0];
       fs.writeFileSync(scheduleFile, JSON.stringify(schedule, null, 2));
       await updateGitHubFile('schedule.json', schedule, `Remove event from ${day}`);
       
-      // Reinitialize the scheduler to update the jobs
       const { initializeEventScheduler } = await import('../utils/eventScheduler.js');
       initializeEventScheduler(interaction.client);
 
@@ -447,7 +260,7 @@ export default {
         `🗑️ Removed from **${day}**:\n` +
         `📝 **Event:** ${removedEvent.name}\n`;
         
-      if (removedEvent.times && removedEvent.times.length > 0) {
+      if (removedEvent.times?.length > 0) {
         response += `⏰ **Was scheduled at:** ${removedEvent.times.join(', ')} CST\n`;
       }
       
