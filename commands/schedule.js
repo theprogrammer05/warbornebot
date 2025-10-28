@@ -307,16 +307,18 @@ export default {
         }
       }
 
-      // Ensure the day exists in the schedule
-      if (!ALL_DAYS.includes(day) && day !== 'Everyday') {
-        return interaction.reply({
-          content: `❌ Invalid day. Must be one of: ${ALL_DAYS.join(', ')}`,
-          flags: MessageFlags.Ephemeral
-        });
-      } else if (day === 'Everyday') {
-        // Handle 'Everyday' section
-        const events = schedule.Everyday || [];
-        if (number < 1 || number > events.length) {
+      // Handle day selection
+      if (day === 'Everyday') {
+        // Add to Everyday section
+        if (!schedule.Everyday) schedule.Everyday = [];
+        
+        const newEvent = {
+          name: name,
+          times: times,
+          description: description
+        };
+        
+        schedule.Everyday.push(newEvent);
           return interaction.reply({
             content: `❌ Invalid event number. Must be between 1 and ${events.length}`,
             flags: MessageFlags.Ephemeral
