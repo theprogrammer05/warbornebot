@@ -6,7 +6,7 @@
 
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, MessageFlags } from 'discord.js';
 import { scheduleReminder, loadReminders, saveReminders, removeReminder } from '../utils/reminderManager.js';
-import { getCentralTime } from '../utils/timeUtils.js';
+import { getCentralTime, createCentralDate } from '../utils/timeUtils.js';
 
 export default {
   name: 'wb-reminder',
@@ -129,7 +129,8 @@ export default {
       });
     }
     
-    const triggerTime = new Date(`${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:00-06:00`);
+    // Use DST-aware date creation (automatically handles CST/CDT)
+    const triggerTime = createCentralDate(year, month, day, hours, minutes);
     
     if (isNaN(triggerTime.getTime())) {
       return interaction.reply({

@@ -1,7 +1,12 @@
 /**
  * Time Utilities
- * Shared functions for parsing and formatting times in CST timezone.
+ * Shared functions for parsing and formatting times in CST/CDT timezone.
+ * Uses Luxon for proper DST handling.
  */
+
+import { DateTime } from 'luxon';
+
+const TIMEZONE = 'America/Chicago';
 
 export function parseTimeString(timeStr) {
   const match = timeStr.match(/^(\d{1,2}):(\d{2})(?::\d{2})?\s*(am|pm)?$/i);
@@ -28,5 +33,16 @@ export function validateAndFormatTime(timeStr) {
 }
 
 export function getCentralTime() {
-  return new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Chicago' }));
+  return DateTime.now().setZone(TIMEZONE).toJSDate();
+}
+
+export function createCentralDate(year, month, day, hours, minutes) {
+  // Create a DateTime object in America/Chicago timezone
+  // Luxon automatically handles DST transitions
+  const dt = DateTime.fromObject(
+    { year: parseInt(year), month: parseInt(month), day: parseInt(day), hour: hours, minute: minutes, second: 0 },
+    { zone: TIMEZONE }
+  );
+  
+  return dt.toJSDate();
 }
