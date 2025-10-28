@@ -32,6 +32,7 @@ import { updateGitHubFile } from '../utils/github.js';
 const scheduleFile = path.join(process.cwd(), 'schedule.json');
 
 const VALID_DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const ALL_DAYS = [...VALID_DAYS, 'Everyday'];
 
 // Initialize schedule.json with all days if it doesn't exist or is in old format
 function initializeSchedule() {
@@ -46,6 +47,14 @@ function initializeSchedule() {
   
   // Migrate old format (string values) to new format (array values)
   let needsMigration = false;
+  
+  // Ensure Everyday section exists
+  if (!schedule.Everyday) {
+    schedule.Everyday = [];
+    needsMigration = true;
+  }
+  
+  // Handle regular days
   VALID_DAYS.forEach(day => {
     if (!schedule[day]) {
       schedule[day] = [];
@@ -78,14 +87,17 @@ export default {
     {
       name: 'add',
       type: 1,
-      description: 'Add an event to a specific day',
+      description: 'Add an event to a specific day or Everyday section',
       options: [
         {
           name: 'day',
           type: 3, // STRING
-          description: 'Day of the week',
+          description: 'Day of the week or "Everyday" for daily events',
           required: true,
-          choices: VALID_DAYS.map(day => ({ name: day, value: day })),
+          choices: ALL_DAYS.map(day => ({
+            name: day === 'Everyday' ? 'Everyday (Daily)' : day,
+            value: day
+          })),
         },
         {
           name: 'name',
@@ -110,14 +122,17 @@ export default {
     {
       name: 'remove',
       type: 1,
-      description: 'Remove an event from a specific day',
+      description: 'Remove an event from a specific day or Everyday section',
       options: [
         {
           name: 'day',
           type: 3, // STRING
-          description: 'Day of the week',
+          description: 'Day of the week or "Everyday" for daily events',
           required: true,
-          choices: VALID_DAYS.map(day => ({ name: day, value: day })),
+          choices: ALL_DAYS.map(day => ({
+            name: day === 'Everyday' ? 'Everyday (Daily)' : day,
+            value: day
+          })),
         },
         {
           name: 'number',
