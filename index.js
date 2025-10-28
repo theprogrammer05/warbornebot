@@ -19,8 +19,6 @@ if (!DISCORD_TOKEN || !CLIENT_ID || !GUILD_ID || !ANNOUNCE_CHANNEL_ID) {
 const commandsPath = path.join(process.cwd(), 'commands');
 const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
 
-const commands = [];
-
 // Create a collection to store commands in the client
 client.commands = new Map();
 
@@ -33,48 +31,11 @@ for (const file of commandFiles) {
     }
     // Add command to the collection
     client.commands.set(command.default.name, command.default);
-    // Also add to the commands array for registration
-    commands.push(command.default);
     console.log(`✅ Loaded command: ${command.default.name}`);
   } catch (error) {
     console.error(`❌ Error loading command ${file}:`, error);
   }
 }
-
-// Register commands with Discord (guild-specific)
-const rest = new REST({ version: '10' }).setToken(DISCORD_TOKEN);
-
-(async () => {
-  try {
-    console.log('Started refreshing application (/) commands.');
-    
-    // First, clear all existing commands
-    const existingCommands = await rest.get(
-      Routes.applicationGuildCommands(CLIENT_ID, GUILD_ID)
-    );
-    
-    // Delete all existing commands
-    const deletePromises = existingCommands.map(command => 
-      rest.delete(Routes.applicationGuildCommand(CLIENT_ID, GUILD_ID, command.id))
-    );
-    
-    await Promise.all(deletePromises);
-    console.log('✅ Cleared existing commands.');
-
-    // Register new commands
-    if (commands.length > 0) {
-      await rest.put(
-        Routes.applicationGuildCommands(CLIENT_ID, GUILD_ID),
-        { body: commands }
-      );
-      console.log(`✅ Successfully registered ${commands.length} commands.`);
-    } else {
-      console.warn('⚠️ No commands to register.');
-    }
-  } catch (error) {
-    console.error('❌ Error managing commands:', error);
-  }
-})();
 
 // Handle command interactions
 client.on('interactionCreate', async interaction => {

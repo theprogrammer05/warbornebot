@@ -12,7 +12,7 @@ function getDayIndex(day) {
   return index >= 0 ? index : null;
 }
 
-async function sendEventReminder(client, day, event, eventTime) {
+async function sendEventReminder(client, day, event, eventTime, isReminder = false) {
   try {
     const channel = await client.channels.fetch(process.env.ANNOUNCE_CHANNEL_ID);
     if (!channel) {
@@ -20,7 +20,9 @@ async function sendEventReminder(client, day, event, eventTime) {
       return;
     }
 
-    let message = `🔔 **Event Reminder**\n`;
+    let message = isReminder 
+      ? `⏰ **30-Minute Reminder**\n` 
+      : `🔔 **Event Starting Now**\n`;
     
     // Add day info only if it's not an everyday event
     if (day !== 'Everyday') {
@@ -87,23 +89,48 @@ export function initializeEventScheduler(client) {
         const [hours, minutes] = parseTimeString(time);
         if (hours === null || minutes === null) return;
         
-        let cronExpression;
+        // Create a date object to handle time calculations
+        const eventDate = new Date();
+        eventDate.setHours(hours, minutes, 0, 0);
+        
+        // Calculate 30 minutes before the event
+        const reminderDate = new Date(eventDate.getTime() - 30 * 60 * 1000);
+        const reminderHours = reminderDate.getHours();
+        const reminderMinutes = reminderDate.getMinutes();
+        
+        let cronExpression, reminderCronExpression;
         
         if (day === 'Everyday') {
-          // For everyday events, run every day at the specified time
+          // For everyday events
           cronExpression = `0 ${minutes} ${hours} * * *`;
+          reminderCronExpression = `0 ${reminderMinutes} ${reminderHours} * * *`;
         } else {
-          // For specific days, run on that day of the week
+          // For specific days
           const dayOfWeek = getDayIndex(day);
           if (dayOfWeek === null) return; // Invalid day
           
-          // Format: second minute hour day-of-month month day-of-week
-          cronExpression = `0 ${minutes} ${hours} * * ${dayOfWeek}`;
+          // If reminder is on the same day
+          if (reminderDate.getDate() === eventDate.getDate()) {
+            cronExpression = `0 ${minutes} ${hours} * * ${dayOfWeek}`;
+            reminderCronExpression = `0 ${reminderMinutes} ${reminderHours} * * ${dayOfWeek}`;
+          } else {
+            // If reminder is on the previous day (for early morning events)
+            const previousDay = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Sunday = 0, Saturday = 6
+            cronExpression = `0 ${minutes} ${hours} * * ${dayOfWeek}`;
+            reminderCronExpression = `0 ${reminderMinutes} ${reminderHours} * * ${previousDay}`;
+          }
         }
         
-        // Schedule the reminder
+        // Schedule the 30-minute reminder
+        if (reminderCronExpression) {
+          event.reminderJob = cron.schedule(reminderCronExpression, () => {
+            sendEventReminder(client, day, event, time, true); // true = isReminder
+          });
+        }
+        
+        // Schedule the main event
         event.job = cron.schedule(cronExpression, () => {
-          sendEventReminder(client, day, event, time);
+          sendEventReminder(client, day, event, time, false); // false = not a reminder
         });
       });
     });

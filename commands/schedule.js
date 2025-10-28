@@ -82,6 +82,7 @@ export default {
       name: 'view',
       type: 1, // SUB_COMMAND
       description: 'View the weekly schedule',
+      options: []
     },
     {
       name: 'add',
@@ -176,7 +177,7 @@ export default {
       };
 
       // Build the schedule in parts
-      const header = '📅 **Weekly Event Schedule**\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n';
+      const header = '📅 **Weekly Event Schedule**\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n';
       const footer = '\n💡 *Use `/wb-schedule add` to add events*';
       
       // Build schedule text for each day
@@ -184,20 +185,19 @@ export default {
       
       // Add Everyday section first
       const everydayEvents = schedule.Everyday || [];
-      let everydayText = '🌟 **Everyday (Daily)**\n';
+      let everydayText = '🌟 **Everyday (Daily)**';
       
       if (everydayEvents.length === 0) {
-        everydayText += '   • _No daily events scheduled_\n\n';
+        everydayText += '\n   • _No daily events scheduled_';
       } else {
         everydayEvents.forEach((event, i) => {
-          everydayText += `   **${i + 1}.** **Event:** ${event.name}\n`;
+          everydayText += `\n   **${i + 1}.** **Event:** ${event.name}`;
           if (event.times?.length > 0) {
-            everydayText += `     **Time:** ${event.times.join(', ')} CST\n`;
+            everydayText += `\n     **Time:** ${event.times.join(', ')} CST`;
           }
           if (event.description) {
-            everydayText += `     **Description:** ${event.description}\n`;
+            everydayText += `\n     **Description:** ${event.description}`;
           }
-          everydayText += '\n';
         });
       }
       daySections.push(everydayText);
@@ -207,20 +207,19 @@ export default {
         const events = schedule[day] || [];
         const emoji = dayEmojis[day] || '📅';
         
-        let dayText = `${emoji} **${day}**\n`;
+        let dayText = `\n${emoji} **${day}**`;
         
         if (events.length === 0) {
-          dayText += '   • _No events scheduled_\n\n';
+          dayText += '\n   • _No events scheduled_';
         } else {
           events.forEach((event, i) => {
-            dayText += `   **${i + 1}.** **Event:** ${event.name}\n`;
+            dayText += `\n   **${i + 1}.** **Event:** ${event.name}`;
             if (event.times?.length > 0) {
-              dayText += `     **Time:** ${event.times.join(', ')} CST\n`;
+              dayText += `\n     **Time:** ${event.times.join(', ')} CST`;
             }
             if (event.description) {
-              dayText += `     **Description:** ${event.description}\n`;
+              dayText += `\n     **Description:** ${event.description}`;
             }
-            dayText += '\n';
           });
         }
         daySections.push(dayText);
