@@ -7,13 +7,6 @@
         "6:00 PM",
         "8:00 PM"
       ]
-    },
-    {
-      "name": "test!",
-      "description": "test desc",
-      "times": [
-        "3:30 AM"
-      ]
     }
   ],
   "Sunday": [
