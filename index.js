@@ -100,6 +100,19 @@ client.on('interactionCreate', async (interaction) => {
 client.once('clientReady', async () => {
   try {
     console.log(`✅ Bot logged in as ${client.user.tag}`);
+    
+    // Deploy commands on startup (only if needed - Railway redeploys trigger this)
+    // Discord cache takes ~1 minute to propagate globally
+    if (process.env.RAILWAY_DEPLOYMENT_ID) {
+      console.log('🔄 Railway deployment detected - updating Discord commands...');
+      try {
+        const { execSync } = await import('child_process');
+        execSync('node deploy-commands.js', { stdio: 'inherit' });
+        console.log('✅ Commands deployed. Discord cache will update in ~1 minute.');
+      } catch (err) {
+        console.error('⚠️ Command deployment failed (non-critical):', err.message);
+      }
+    }
 
     initializeReminders(client);
     initializeEventScheduler(client);

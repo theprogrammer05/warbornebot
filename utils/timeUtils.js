@@ -1,10 +1,8 @@
 /**
  * Time Utilities
  * Shared functions for parsing and formatting times in CST/CDT timezone.
- * Uses Luxon for proper DST handling.
+ * Uses native JavaScript with Intl API for DST handling.
  */
-
-import { DateTime } from 'luxon';
 
 const TIMEZONE = 'America/Chicago';
 
@@ -33,16 +31,35 @@ export function validateAndFormatTime(timeStr) {
 }
 
 export function getCentralTime() {
-  return DateTime.now().setZone(TIMEZONE).toJSDate();
+  // Get current time in America/Chicago timezone
+  const now = new Date();
+  const centralString = now.toLocaleString('en-US', { timeZone: TIMEZONE });
+  return new Date(centralString);
 }
 
 export function createCentralDate(year, month, day, hours, minutes) {
-  // Create a DateTime object in America/Chicago timezone
-  // Luxon automatically handles DST transitions
-  const dt = DateTime.fromObject(
-    { year: parseInt(year), month: parseInt(month), day: parseInt(day), hour: hours, minute: minutes, second: 0 },
-    { zone: TIMEZONE }
-  );
+  // Create date in local timezone first
+  const localDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day), hours, minutes, 0);
   
-  return dt.toJSDate();
+  // Format it as if it's in Chicago timezone
+  const chicagoFormatter = new Intl.DateTimeFormat('en-US', {
+    timeZone: TIMEZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false
+  });
+  
+  const chicagoString = chicagoFormatter.format(localDate);
+  const chicagoDate = new Date(chicagoString);
+  
+  // Calculate offset and adjust
+  const offset = localDate.getTime() - chicagoDate.getTime();
+  
+  // Create the target date with the opposite offset
+  const targetDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day), hours, minutes, 0);
+  return new Date(targetDate.getTime() + offset);
 }

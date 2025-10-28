@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node deploy-commands.js && node index.js",
+    "start": "node index.js",
     "deploy": "node deploy-commands.js",
     "start:dev": "node index.js"
   },
@@ -16,7 +16,6 @@
   "dependencies": {
     "discord.js": "^14.23.2",
     "dotenv": "^17.2.3",
-    "luxon": "^3.4.4",
     "node-cron": "^3.0.3",
     "node-fetch": "^3.3.2"
   }
