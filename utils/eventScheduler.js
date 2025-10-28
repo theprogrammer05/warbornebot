@@ -67,7 +67,9 @@ function parseTimeString(timeStr) {
 
 function getDayIndex(day) {
   const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-  return days.indexOf(day.toLowerCase());
+  const dayLower = day.toLowerCase();
+  if (dayLower === 'everyday') return null; // Special case for everyday events
+  return days.indexOf(dayLower);
 }
 
 async function sendEventReminder(client, day, event, eventTime) {

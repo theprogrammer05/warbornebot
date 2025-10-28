@@ -272,16 +272,83 @@ export default {
       const day = interaction.options.getString('day');
       const number = interaction.options.getInteger('number');
 
-      if (!schedule[day] || schedule[day].length === 0) {
+      // Ensure the day exists in the schedule
+      if (!ALL_DAYS.includes(day)) {
+        if (day === 'Everyday') {
+          // Handle 'Everyday' section
+          const events = schedule.Everyday || [];
+          if (number < 1 || number > events.length) {
+            return interaction.reply({
+              content: `❌ Invalid event number. Must be between 1 and ${events.length}`,
+              flags: MessageFlags.Ephemeral
+            });
+          }
+
+          const removedEvent = events.splice(number - 1, 1)[0];
+          fs.writeFileSync(scheduleFile, JSON.stringify(schedule, null, 2));
+          await updateGitHubFile('schedule.json', schedule, `Remove event from Everyday`);
+
+          let response = 
+            `✅ **Event Removed Successfully!**\n` +
+            `━━━━━━━━━━━━━━━━━━━━━━━\n` +
+            `🗑️ Removed from **Everyday**:\n` +
+            `📝 **Event:** ${removedEvent.name}\n`;
+            
+          if (removedEvent.times && removedEvent.times.length > 0) {
+            response += `⏰ **Was scheduled at:** ${removedEvent.times.join(', ')} CST\n`;
+          }
+          
+          response += `\nThe schedule has been updated.`;
+
+          return interaction.reply({
+            content: response,
+            flags: MessageFlags.Ephemeral
+          });
+        }
+      }
+
+      // Ensure the day exists in the schedule
+      if (!ALL_DAYS.includes(day) && day !== 'Everyday') {
         return interaction.reply({
-          content: `❌ **No Events Found**\n📅 **${day}** has no scheduled events.`,
-          flags: MessageFlags.Ephemeral,
+          content: `❌ Invalid day. Must be one of: ${ALL_DAYS.join(', ')}`,
+          flags: MessageFlags.Ephemeral
+        });
+      } else if (day === 'Everyday') {
+        // Handle 'Everyday' section
+        const events = schedule.Everyday || [];
+        if (number < 1 || number > events.length) {
+          return interaction.reply({
+            content: `❌ Invalid event number. Must be between 1 and ${events.length}`,
+            flags: MessageFlags.Ephemeral
+          });
+        }
+
+        const removedEvent = events.splice(number - 1, 1)[0];
+        fs.writeFileSync(scheduleFile, JSON.stringify(schedule, null, 2));
+        await updateGitHubFile('schedule.json', schedule, `Remove event from Everyday`);
+
+        let response = 
+          `✅ **Event Removed Successfully!**\n` +
+          `━━━━━━━━━━━━━━━━━━━━━━━\n` +
+          `🗑️ Removed from **Everyday**:\n` +
+          `📝 **Event:** ${removedEvent.name}\n`;
+          
+        if (removedEvent.times && removedEvent.times.length > 0) {
+          response += `⏰ **Was scheduled at:** ${removedEvent.times.join(', ')} CST\n`;
+        }
+        
+        response += `\nThe schedule has been updated.`;
+
+        return interaction.reply({
+          content: response,
+          flags: MessageFlags.Ephemeral
         });
       }
 
       if (number < 1 || number > schedule[day].length) {
         return interaction.reply({
-          content: 
+          content: `❌ Invalid event number. Must be between 1 and ${schedule[day].length}`,
+          flags: MessageFlags.Ephemeral
             `❌ **Invalid Event Number**\n` +
             `📅 **${day}** has **${schedule[day].length}** event(s).\n` +
             `Please choose a number between 1 and ${schedule[day].length}.`,
