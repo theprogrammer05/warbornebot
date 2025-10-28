@@ -2,14 +2,5 @@
 # Ignore JSON data files - they're runtime data, not code
 watchPaths = ["**/*.js", "package.json", "package-lock.json"]
 
-[build]
-watchIgnore = ["reminders.json", "faq.json", "schedule.json"]
-
-[deploy]
-[deploy.volumes]
-"/app/schedule.json" = "schedule"
-"/app/reminders.json" = "reminders"
-"/app/faq.json" = "faq"
-
-[build.ignore]
-- "**/*.json"
+[build.watchIgnore]
+paths = ["reminders.json", "faq.json", "schedule.json"]
