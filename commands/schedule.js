@@ -319,6 +319,10 @@ export default {
       schedule[day].push(event);
       fs.writeFileSync(scheduleFile, JSON.stringify(schedule, null, 2));
       await updateGitHubFile('schedule.json', schedule, `Add event to ${day}`);
+      
+      // Reinitialize the scheduler to pick up the new event
+      const { initializeEventScheduler } = await import('../utils/eventScheduler.js');
+      initializeEventScheduler(interaction.client);
 
       let response = 
         `✅ **Event Added Successfully!**\n` +
@@ -428,9 +432,14 @@ export default {
         });
       }
 
-      const removedEvent = schedule[day].splice(number - 1, 1)[0];
+      // Remove the event
+      schedule[day].splice(eventIndex, 1);
       fs.writeFileSync(scheduleFile, JSON.stringify(schedule, null, 2));
       await updateGitHubFile('schedule.json', schedule, `Remove event from ${day}`);
+      
+      // Reinitialize the scheduler to update the jobs
+      const { initializeEventScheduler } = await import('../utils/eventScheduler.js');
+      initializeEventScheduler(interaction.client);
 
       let response = 
         `✅ **Event Removed Successfully!**\n` +

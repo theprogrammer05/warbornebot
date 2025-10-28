@@ -41,21 +41,37 @@ async function sendEventReminder(client, day, event, eventTime, isReminder = fal
   }
 }
 
+// Store the client instance and jobs
+let schedulerClient;
+const activeJobs = [];
+
+// Clear all scheduled jobs
+function clearAllJobs() {
+  activeJobs.forEach(job => {
+    if (job && job.stop) job.stop();
+  });
+  activeJobs.length = 0;
+}
+
 // Initialize event scheduler
 export function initializeEventScheduler(client) {
+  // Store the client instance
+  schedulerClient = client;
+  
+  // Clear all existing jobs
+  clearAllJobs();
+  
   // Load schedule
   const schedule = JSON.parse(fs.readFileSync(scheduleFile, 'utf8'));
-
-  // Clear all existing jobs
-  // Clear existing jobs
-  Object.keys(schedule).forEach(day => {
-    const events = Array.isArray(schedule[day]) ? schedule[day] : [];
-    events.forEach(event => {
-      // Clear any existing jobs for this event
-      if (event.job) {
-        event.job.cancel();
-      }
-    });
+  
+  // Clear any existing jobs in the schedule
+  Object.values(schedule).forEach(events => {
+    if (Array.isArray(events)) {
+      events.forEach(event => {
+        delete event.job;
+        delete event.reminderJob;
+      });
+    }
   });
 
   // Helper function to parse time string "HH:MM" into hours and minutes
@@ -123,15 +139,27 @@ export function initializeEventScheduler(client) {
         
         // Schedule the 30-minute reminder
         if (reminderCronExpression) {
-          event.reminderJob = cron.schedule(reminderCronExpression, () => {
+          const reminderJob = cron.schedule(reminderCronExpression, () => {
+            console.log(`Sending 30-min reminder for ${event.name} at ${time}`);
             sendEventReminder(client, day, event, time, true); // true = isReminder
+          }, {
+            scheduled: true,
+            timezone: 'America/Chicago' // CST timezone
           });
+          activeJobs.push(reminderJob);
+          event.reminderJob = reminderJob;
         }
         
         // Schedule the main event
-        event.job = cron.schedule(cronExpression, () => {
+        const mainJob = cron.schedule(cronExpression, () => {
+          console.log(`Sending event notification for ${event.name} at ${time}`);
           sendEventReminder(client, day, event, time, false); // false = not a reminder
+        }, {
+          scheduled: true,
+          timezone: 'America/Chicago' // CST timezone
         });
+        activeJobs.push(mainJob);
+        event.job = mainJob;
       });
     });
   });
