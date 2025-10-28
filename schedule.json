@@ -9,13 +9,6 @@
       ]
     },
     {
-      "name": "Daily Reset",
-      "description": "Daily reset of all events and rewards",
-      "times": [
-        "12:00 AM"
-      ]
-    },
-    {
       "name": "testing an event",
       "description": "testing an event!!",
       "times": [
