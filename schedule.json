@@ -9,13 +9,6 @@
       ]
     },
     {
-      "name": "test event",
-      "description": "test event desc",
-      "times": [
-        "3:28 AM"
-      ]
-    },
-    {
       "name": "test!",
       "description": "test desc",
       "times": [
