@@ -9,13 +9,6 @@
       ]
     },
     {
-      "name": "Testing Erryday event",
-      "description": "This is a test dec",
-      "times": [
-        "3:20 AM"
-      ]
-    },
-    {
       "name": "test event",
       "description": "test event desc",
       "times": [
