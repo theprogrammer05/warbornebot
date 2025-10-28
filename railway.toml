@@ -1,11 +1,11 @@
 [build]
-# Only watch these paths for changes - excludes JSON data files
-watchPaths = [
+# Only trigger deployments when these patterns match changed files
+# Uses gitignore-style patterns - JSON data files are excluded
+watchPatterns = [
   "**/*.js",
   "package.json",
   "package-lock.json",
-  "railway.toml",
-  ".env"
+  "railway.toml"
 ]
 
 [deploy]

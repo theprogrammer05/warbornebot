@@ -5,8 +5,9 @@
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node index.js",
-    "deploy": "node deploy-commands.js"
+    "start": "node deploy-commands.js && node index.js",
+    "deploy": "node deploy-commands.js",
+    "start:dev": "node index.js"
   },
   "keywords": [],
   "author": "",

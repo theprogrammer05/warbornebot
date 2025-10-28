@@ -6,7 +6,7 @@ import path from 'path';
 // Load environment variables
 dotenv.config();
 
-const { DISCORD_TOKEN, CLIENT_ID } = process.env;
+const { DISCORD_TOKEN, CLIENT_ID, GUILD_ID } = process.env;
 
 if (!DISCORD_TOKEN || !CLIENT_ID) {
   console.error('❌ Missing required environment variables.');
@@ -36,6 +36,25 @@ async function deployCommands() {
   try {
     console.log('🚀 Starting command deployment...');
     
+    // Clear guild commands if GUILD_ID exists (to remove old duplicates)
+    if (GUILD_ID) {
+      console.log('🔄 Clearing existing guild commands...');
+      try {
+        const existingGuildCommands = await rest.get(
+          Routes.applicationGuildCommands(CLIENT_ID, GUILD_ID)
+        );
+        
+        const deleteGuildPromises = existingGuildCommands.map(command => 
+          rest.delete(Routes.applicationGuildCommand(CLIENT_ID, GUILD_ID, command.id))
+        );
+        
+        await Promise.all(deleteGuildPromises);
+        console.log(`✅ Cleared ${deleteGuildPromises.length} guild commands.`);
+      } catch (err) {
+        console.log('⚠️ No guild commands to clear or error:', err.message);
+      }
+    }
+    
     // Clear all existing global commands
     console.log('🔄 Clearing existing global commands...');
     const existingCommands = await rest.get(
@@ -62,14 +81,16 @@ async function deployCommands() {
       { body: commandJSONs }
     );
     
-    // Note: Only deploying global commands to avoid duplicates
-    // Guild-specific commands have been removed
-    
-    console.log(`✅ Successfully deployed ${data.length} commands!`);
-    console.log('✨ Deployment complete!');
+    console.log(`✅ Successfully deployed ${data.length} global commands!`);
+    console.log('✨ Deployment complete! Commands will be available in ~1 minute.');
   } catch (error) {
     console.error('❌ Error during deployment:', error);
+    console.error('⚠️ Command deployment failed, but bot will continue to start...');
+    // Don't exit with error code - allow bot to start anyway
   }
 }
 
-deployCommands();
+deployCommands().catch(err => {
+  console.error('❌ Fatal error during command deployment:', err);
+  // Still don't exit with error - Railway should start the bot
+});
