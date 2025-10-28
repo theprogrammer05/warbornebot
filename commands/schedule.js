@@ -364,12 +364,10 @@ export default {
 
       if (number < 1 || number > schedule[day].length) {
         return interaction.reply({
-          content: `❌ Invalid event number. Must be between 1 and ${schedule[day].length}`,
-          flags: MessageFlags.Ephemeral
-            `❌ **Invalid Event Number**\n` +
+          content: `❌ **Invalid Event Number**\n` +
             `📅 **${day}** has **${schedule[day].length}** event(s).\n` +
             `Please choose a number between 1 and ${schedule[day].length}.`,
-          flags: MessageFlags.Ephemeral,
+          flags: MessageFlags.Ephemeral
         });
       }
 
