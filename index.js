@@ -41,10 +41,15 @@ client.on('interactionCreate', async interaction => {
   const command = client.commands.get(interaction.commandName);
   if (!command) return;
 
+  // Log command usage
+  const username = interaction.user.tag; // e.g., "Username#1234"
+  const guildName = interaction.guild ? interaction.guild.name : 'DM';
+  console.log(`📝 Command used: /${interaction.commandName} by ${username} in ${guildName}`);
+
   try {
     await command.execute(interaction);
   } catch (error) {
-    console.error('Error executing command:', error);
+    console.error(`❌ Error executing /${interaction.commandName} for ${username}:`, error);
     const errorMsg = { content: '❌ There was an error executing this command.', ephemeral: true };
     if (interaction.replied || interaction.deferred) {
       await interaction.followUp(errorMsg);
