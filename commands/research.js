@@ -200,31 +200,6 @@ export default {
         // Show placeholder if starfall field exists but no data yet
         embed.addFields({ name: ':moneybag: Starfall Costs', value: '```\nData coming soon...\n```' });
       }
-
-      // Show summary
-      const totalExergyToMax = hasExergy ? cumulativeExergy : null;
-      const totalStarfallToMax = hasStarfall ? cumulativeStarfall : null;
-      const hasIncompleteData = hasStarfall && sampleItem.starfallCosts.some(c => c === null);
-      
-      let summaryText = '';
-      if (totalExergyToMax !== null) {
-        summaryText += `:diamonds: **One item:** ${formatNumber(totalExergyToMax)} Exergy\n`;
-        summaryText += `:diamonds: **All ${research.items.length} items:** ${formatNumber(totalExergyToMax * research.items.length)} Exergy\n`;
-      }
-      if (totalStarfallToMax !== null) {
-        if (summaryText) summaryText += '\n';
-        const suffix = hasIncompleteData ? ' (Partial - some levels unknown)' : '';
-        summaryText += `:moneybag: **One item:** ${formatNumber(totalStarfallToMax)} Starfall${suffix}\n`;
-        summaryText += `:moneybag: **All ${research.items.length} items:** ${formatNumber(totalStarfallToMax * research.items.length)} Starfall${suffix}`;
-      }
-      
-      if (summaryText) {
-        embed.addFields({
-          name: '📊 Total to Max All Levels',
-          value: summaryText,
-          inline: false
-        });
-      }
     }
 
     embed.setFooter({ text: '💡 Plan wisely • 🔬 Research smarter, not harder' });
