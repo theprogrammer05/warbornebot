@@ -27,8 +27,8 @@ export default {
       description: 'Select a research type to view',
       required: true,
       choices: [
-        { name: 'Drifter Upgrade', value: 'drifter' },
-        { name: 'Driftmark', value: 'driftmark' },
+        { name: 'Drifter Upgrades', value: 'drifter' },
+        { name: 'Driftmark Upgrades', value: 'driftmark' },
         { name: 'Trade - Advanced Equipment', value: 'equip' },
         { name: 'Drifter Stats (Str/Agi/Int/Melee/Ranged)', value: 'drifter_stats' },
         { name: 'Armor & Weapon Boosts', value: 'armor_weapon_boosts' },
