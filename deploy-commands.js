@@ -82,7 +82,12 @@ async function deployCommands() {
     );
     
     console.log(`✅ Successfully deployed ${data.length} global commands!`);
-    console.log('✨ Deployment complete! Commands will be available in ~1 minute.');
+    console.log('⏳ Waiting 5 seconds for Discord cache to update...');
+    
+    // Give Discord a moment to propagate commands before bot starts
+    await new Promise(resolve => setTimeout(resolve, 5000));
+    
+    console.log('✨ Deployment complete! Bot can now start.');
   } catch (error) {
     console.error('❌ Error during deployment:', error);
     console.error('⚠️ Command deployment failed, but bot will continue to start...');
