@@ -72,8 +72,8 @@ export default {
     // Handle tier-based research (drifter, driftmark, equip)
     if (research.tiers && research.tiers.length > 0) {
       let table = '```\n';
-      table += 'Tier | :diamonds: Exergy | Total :diamonds: | :moneybag: Starfall | Total :moneybag:\n';
-      table += '-----|-------------------|------------------|---------------------|------------------\n';
+      table += 'Tr|:diamonds:Cost|Total :diamonds:|:moneybag:Cost|Total :moneybag:\n';
+      table += '--|--------------|---------------|--------------|---------------\n';
       
       let cumulativeExergy = 0;
       let cumulativeStarfall = 0;
@@ -90,13 +90,13 @@ export default {
           hasAnyStarfall = true;
         }
         
-        const tierStr = tier.tier.padEnd(5);
-        const exergyStr = (tier.exergy ? formatNumber(tier.exergy) : 'Unknown').padStart(17);
-        const totalExergyStr = (hasAnyExergy ? formatNumber(cumulativeExergy) : 'Unknown').padStart(16);
-        const starfallStr = (tier.starfall !== null ? formatNumber(tier.starfall) : 'Unknown').padStart(19);
-        const totalStarfallStr = (hasAnyStarfall ? formatNumber(cumulativeStarfall) : 'Unknown').padStart(16);
+        const tierStr = tier.tier.padEnd(2);
+        const exergyStr = (tier.exergy ? formatNumber(tier.exergy) : '?').padStart(14);
+        const totalExergyStr = (hasAnyExergy ? formatNumber(cumulativeExergy) : '?').padStart(15);
+        const starfallStr = (tier.starfall !== null ? formatNumber(tier.starfall) : '?').padStart(14);
+        const totalStarfallStr = (hasAnyStarfall ? formatNumber(cumulativeStarfall) : '?').padStart(15);
         
-        table += `${tierStr}| ${exergyStr} | ${totalExergyStr} | ${starfallStr} | ${totalStarfallStr}\n`;
+        table += `${tierStr}|${exergyStr}|${totalExergyStr}|${starfallStr}|${totalStarfallStr}\n`;
       });
       
       table += '```';
@@ -133,21 +133,21 @@ export default {
         }
       }
 
-      // Unified table format (same as tier-based)
+      // Compact table format to fit Discord's 1024 char limit
       const sampleItem = research.items[0];
       const hasExergy = sampleItem.exergyCosts && sampleItem.exergyCosts.length > 0;
       const hasStarfall = sampleItem.starfallCosts && sampleItem.starfallCosts.length > 0;
       
       let costTable = '```\n';
-      costTable += 'Lvl  | :diamonds: Exergy | Total :diamonds: | :moneybag: Starfall | Total :moneybag:\n';
-      costTable += '-----|-------------------|------------------|---------------------|------------------\n';
+      costTable += 'Lv|:diamonds:Cost|Total :diamonds:|:moneybag:Cost|Total :moneybag:\n';
+      costTable += '--|--------------|---------------|--------------|---------------\n';
       
       let cumulativeExergy = 0;
       let cumulativeStarfall = 0;
       const maxLevels = hasExergy ? sampleItem.exergyCosts.length : (hasStarfall ? sampleItem.starfallCosts.length : 0);
       
       for (let i = 0; i < maxLevels; i++) {
-        const level = (i + 1).toString().padEnd(5);
+        const level = (i + 1).toString().padStart(2);
         
         const exergyCost = hasExergy ? sampleItem.exergyCosts[i] : null;
         const starfallCost = hasStarfall ? sampleItem.starfallCosts[i] : null;
@@ -155,12 +155,12 @@ export default {
         if (exergyCost) cumulativeExergy += exergyCost;
         if (starfallCost) cumulativeStarfall += starfallCost;
         
-        const exergyStr = (exergyCost !== null ? formatNumber(exergyCost) : 'Unknown').padStart(17);
-        const totalExergyStr = (exergyCost !== null ? formatNumber(cumulativeExergy) : 'Unknown').padStart(16);
-        const starfallStr = (starfallCost !== null ? formatNumber(starfallCost) : 'Unknown').padStart(19);
-        const totalStarfallStr = (starfallCost !== null ? formatNumber(cumulativeStarfall) : 'Unknown').padStart(16);
+        const exergyStr = (exergyCost !== null ? formatNumber(exergyCost) : '?').padStart(14);
+        const totalExergyStr = (exergyCost !== null ? formatNumber(cumulativeExergy) : '?').padStart(15);
+        const starfallStr = (starfallCost !== null ? formatNumber(starfallCost) : '?').padStart(14);
+        const totalStarfallStr = (starfallCost !== null ? formatNumber(cumulativeStarfall) : '?').padStart(15);
         
-        costTable += `${level}| ${exergyStr} | ${totalExergyStr} | ${starfallStr} | ${totalStarfallStr}\n`;
+        costTable += `${level}|${exergyStr}|${totalExergyStr}|${starfallStr}|${totalStarfallStr}\n`;
       }
       
       costTable += '```';
