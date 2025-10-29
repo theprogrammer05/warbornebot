@@ -35,24 +35,30 @@ const rest = new REST({ version: '10' }).setToken(DISCORD_TOKEN);
 async function deployCommands() {
   try {
     console.log('🚀 Starting command deployment...');
+    console.log(`📋 Deploying ${commands.length} commands from local files`);
     
     // Clear guild commands if GUILD_ID exists (to remove old duplicates)
     if (GUILD_ID) {
-      console.log('🔄 Clearing existing guild commands...');
+      console.log(`🔄 Clearing existing guild commands for GUILD_ID: ${GUILD_ID}...`);
       try {
         const existingGuildCommands = await rest.get(
           Routes.applicationGuildCommands(CLIENT_ID, GUILD_ID)
         );
         
-        const deleteGuildPromises = existingGuildCommands.map(command => 
-          rest.delete(Routes.applicationGuildCommand(CLIENT_ID, GUILD_ID, command.id))
-        );
+        console.log(`📊 Found ${existingGuildCommands.length} guild commands to clear`);
+        
+        const deleteGuildPromises = existingGuildCommands.map(command => {
+          console.log(`   🗑️ Deleting guild command: ${command.name}`);
+          return rest.delete(Routes.applicationGuildCommand(CLIENT_ID, GUILD_ID, command.id));
+        });
         
         await Promise.all(deleteGuildPromises);
         console.log(`✅ Cleared ${deleteGuildPromises.length} guild commands.`);
       } catch (err) {
         console.log('⚠️ No guild commands to clear or error:', err.message);
       }
+    } else {
+      console.log('ℹ️ No GUILD_ID set - skipping guild command cleanup');
     }
     
     // Clear all existing global commands
@@ -61,9 +67,12 @@ async function deployCommands() {
       Routes.applicationCommands(CLIENT_ID)
     );
     
-    const deletePromises = existingCommands.map(command => 
-      rest.delete(Routes.applicationCommand(CLIENT_ID, command.id))
-    );
+    console.log(`📊 Found ${existingCommands.length} global commands to clear`);
+    
+    const deletePromises = existingCommands.map(command => {
+      console.log(`   🗑️ Deleting global command: ${command.name}`);
+      return rest.delete(Routes.applicationCommand(CLIENT_ID, command.id));
+    });
     
     await Promise.all(deletePromises);
     console.log(`✅ Cleared ${deletePromises.length} existing global commands.`);
@@ -76,16 +85,25 @@ async function deployCommands() {
       options: cmd.options || []
     }));
     
+    console.log(`📤 Commands to deploy: ${commandJSONs.map(c => c.name).join(', ')}`);
+    
     const data = await rest.put(
       Routes.applicationCommands(CLIENT_ID),
       { body: commandJSONs }
     );
     
     console.log(`✅ Successfully deployed ${data.length} global commands!`);
-    console.log('⏳ Waiting 5 seconds for Discord cache to update...');
+    data.forEach(cmd => console.log(`   ✓ ${cmd.name}`));
     
-    // Give Discord a moment to propagate commands before bot starts
-    await new Promise(resolve => setTimeout(resolve, 5000));
+    // Verify commands are registered
+    console.log('🔍 Verifying deployment...');
+    const verifyCommands = await rest.get(Routes.applicationCommands(CLIENT_ID));
+    console.log(`📊 Verified ${verifyCommands.length} commands are now registered globally`);
+    
+    console.log('⏳ Waiting 10 seconds for Discord cache to fully propagate...');
+    
+    // Give Discord more time to propagate commands before bot starts
+    await new Promise(resolve => setTimeout(resolve, 10000));
     
     console.log('✨ Deployment complete! Bot can now start.');
   } catch (error) {
