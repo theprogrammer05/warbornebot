@@ -81,7 +81,7 @@ export default {
           table += `${tier.tier.padEnd(6)}| ${formatNumber(tier.exergy).padEnd(9)}| ${formatNumber(tier.starfall).padEnd(10)}| ${tier.duration}\n`;
         });
         table += '```';
-        embed.addFields({ name: '📈 Tier Requirements', value: table });
+        embed.addFields({ name: '📈 Tier Requirements - :diamonds: Exergy & :moneybag: Starfall', value: table });
       } else {
         // Drifter/Equipment tier formatting
         let table = '```\n';
@@ -92,54 +92,106 @@ export default {
           table += `${tier.tier.padEnd(6)}| ${formatNumber(tier.exergy)}\n`;
         });
         table += '```';
-        embed.addFields({ name: '📈 Tier Requirements', value: table });
+        embed.addFields({ name: '📈 Tier Requirements - :diamonds: Exergy', value: table });
       }
     }
 
     // Handle item-based research with level costs (drifter_stats, armor_weapon_boosts)
     if (research.items && research.items.length > 0) {
       // Show metadata
-      if (research.baseCost && research.multiplier) {
+      if (research.baseExergyCost || research.baseStarfallCost) {
+        let upgradeInfo = `⚡ Primary Resource: **${research.resource}**\n`;
+        upgradeInfo += `🎯 Max Level: **${research.maxLevel}**\n\n`;
+        
+        if (research.baseExergyCost && research.exergyMultiplier) {
+          upgradeInfo += `💎 **Exergy:**\n`;
+          upgradeInfo += `   • Base Cost: **${formatNumber(research.baseExergyCost)}**\n`;
+          upgradeInfo += `   • Multiplier: **${research.exergyMultiplier}x**\n`;
+        }
+        
+        if (research.baseStarfallCost && research.starfallMultiplier) {
+          upgradeInfo += `\n💰 **Starfall:**\n`;
+          upgradeInfo += `   • Base Cost: **${formatNumber(research.baseStarfallCost)}**\n`;
+          upgradeInfo += `   • Multiplier: **${research.starfallMultiplier}x**\n`;
+        }
+        
         embed.addFields({
           name: '📊 Upgrade Info',
-          value: 
-            `⚡ Resource: **${research.resource}**\n` +
-            `🔢 Base Cost: **${formatNumber(research.baseCost)}**\n` +
-            `📈 Multiplier: **${research.multiplier}x**\n` +
-            `🎯 Max Level: **${research.maxLevel}**`,
+          value: upgradeInfo,
           inline: false
         });
       }
 
       // For each item, show a compact cost table with cumulative
-      research.items.slice(0, 1).forEach(item => {
-        let costTable = '```\n';
-        costTable += 'Lvl | Cost      | Total Cost\n';
-        costTable += '----|-----------|------------\n';
+      const sampleItem = research.items[0];
+      const hasExergy = sampleItem.exergyCosts && sampleItem.exergyCosts.length > 0;
+      const hasStarfall = sampleItem.starfallCosts && sampleItem.starfallCosts.length > 0;
+      
+      let costTable = '```\n';
+      
+      // Build header based on available cost types
+      if (hasExergy && hasStarfall) {
+        costTable += 'Lvl | Exergy Cost | Total Exergy | Starfall Cost | Total Starfall\n';
+        costTable += '----|-------------|--------------|---------------|----------------\n';
+      } else if (hasExergy) {
+        costTable += 'Lvl | Exergy Cost | Total Exergy\n';
+        costTable += '----|-------------|---------------\n';
+      }
+      
+      let cumulativeExergy = 0;
+      let cumulativeStarfall = 0;
+      
+      const maxLevels = hasExergy ? sampleItem.exergyCosts.length : sampleItem.starfallCosts.length;
+      
+      for (let i = 0; i < maxLevels; i++) {
+        const level = (i + 1).toString().padStart(3);
         
-        let cumulative = 0;
-        item.costs.forEach((cost, index) => {
-          cumulative += cost;
-          const level = (index + 1).toString().padStart(3);
-          const costStr = formatNumber(cost).padStart(9);
-          const totalStr = formatNumber(cumulative).padStart(10);
-          costTable += `${level} | ${costStr} | ${totalStr}\n`;
-        });
-        
-        costTable += '```';
-        embed.addFields({ 
-          name: `💎 ${item.name} (Sample - All items have same costs)`, 
-          value: costTable 
-        });
+        if (hasExergy && hasStarfall) {
+          const exergyCost = sampleItem.exergyCosts[i];
+          const starfallCost = sampleItem.starfallCosts[i];
+          cumulativeExergy += exergyCost;
+          cumulativeStarfall += starfallCost;
+          
+          costTable += `${level} | ${formatNumber(exergyCost).padStart(11)} | ${formatNumber(cumulativeExergy).padStart(12)} | ${formatNumber(starfallCost).padStart(13)} | ${formatNumber(cumulativeStarfall).padStart(14)}\n`;
+        } else if (hasExergy) {
+          const exergyCost = sampleItem.exergyCosts[i];
+          cumulativeExergy += exergyCost;
+          
+          costTable += `${level} | ${formatNumber(exergyCost).padStart(11)} | ${formatNumber(cumulativeExergy).padStart(13)}\n`;
+        }
+      }
+      
+      costTable += '```';
+      
+      let fieldName = `💎 ${sampleItem.name} (Sample - All items have same costs)`;
+      if (hasExergy && !hasStarfall) {
+        fieldName = `💎 ${sampleItem.name} - :diamonds: Exergy Costs (All items same)`;
+      } else if (hasExergy && hasStarfall) {
+        fieldName = `💎 ${sampleItem.name} - :diamonds: Exergy & :moneybag: Starfall Costs (All items same)`;
+      }
+      
+      embed.addFields({ 
+        name: fieldName, 
+        value: costTable 
       });
 
       // Show summary
-      const totalToMax = research.items[0].costs.reduce((a, b) => a + b, 0);
+      const totalExergyToMax = hasExergy ? sampleItem.exergyCosts.reduce((a, b) => a + b, 0) : 0;
+      const totalStarfallToMax = hasStarfall ? sampleItem.starfallCosts.reduce((a, b) => a + b, 0) : 0;
+      
+      let summaryText = '';
+      if (hasExergy) {
+        summaryText += `**Total to max one item:** ${formatNumber(totalExergyToMax)} :diamonds: Exergy\n`;
+        summaryText += `**Total for all ${research.items.length} items:** ${formatNumber(totalExergyToMax * research.items.length)} :diamonds: Exergy\n`;
+      }
+      if (hasStarfall) {
+        summaryText += `**Total to max one item:** ${formatNumber(totalStarfallToMax)} :moneybag: Starfall\n`;
+        summaryText += `**Total for all ${research.items.length} items:** ${formatNumber(totalStarfallToMax * research.items.length)} :moneybag: Starfall`;
+      }
+      
       embed.addFields({
         name: '💰 Cost Summary',
-        value: 
-          `**Total to max one item:** ${formatNumber(totalToMax)} ${research.resource}\n` +
-          `**Total for all ${research.items.length} items:** ${formatNumber(totalToMax * research.items.length)} ${research.resource}`,
+        value: summaryText,
         inline: false
       });
     }

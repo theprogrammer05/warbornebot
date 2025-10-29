@@ -160,31 +160,39 @@
     "name": "Drifter Str/Agi/Int/Melee/Ranged",
     "description": "Drifter stat upgrades with 1.45x multiplier progression",
     "note": "Costs are calculated with rounding; in-game values may vary slightly",
-    "baseCost": 309,
-    "multiplier": 1.45,
+    "baseExergyCost": 309,
+    "exergyMultiplier": 1.45,
+    "baseStarfallCost": null,
+    "starfallMultiplier": null,
     "maxLevel": 10,
     "resource": "Exergy",
+    "costType": "exergy",
     "tiers": null,
     "items": [
       {
         "name": "Drifter Strength",
-        "costs": [309, 448, 650, 942, 1366, 1981, 2872, 4164, 6038, 8755]
+        "exergyCosts": [309, 448, 650, 942, 1366, 1981, 2872, 4164, 6038, 8755],
+        "starfallCosts": null
       },
       {
         "name": "Drifter Agility",
-        "costs": [309, 448, 650, 942, 1366, 1981, 2872, 4164, 6038, 8755]
+        "exergyCosts": [309, 448, 650, 942, 1366, 1981, 2872, 4164, 6038, 8755],
+        "starfallCosts": null
       },
       {
         "name": "Drifter Intelligence",
-        "costs": [309, 448, 650, 942, 1366, 1981, 2872, 4164, 6038, 8755]
+        "exergyCosts": [309, 448, 650, 942, 1366, 1981, 2872, 4164, 6038, 8755],
+        "starfallCosts": null
       },
       {
         "name": "Drifter Melee",
-        "costs": [309, 448, 650, 942, 1366, 1981, 2872, 4164, 6038, 8755]
+        "exergyCosts": [309, 448, 650, 942, 1366, 1981, 2872, 4164, 6038, 8755],
+        "starfallCosts": null
       },
       {
         "name": "Drifter Ranged",
-        "costs": [309, 448, 650, 942, 1366, 1981, 2872, 4164, 6038, 8755]
+        "exergyCosts": [309, 448, 650, 942, 1366, 1981, 2872, 4164, 6038, 8755],
+        "starfallCosts": null
       }
     ]
   },
@@ -192,35 +200,44 @@
     "name": "Str/Agi/Int Armor & Weapon Boosts",
     "description": "Equipment stat boosts with 1.75x multiplier progression",
     "note": "Costs are calculated with rounding; in-game values may vary slightly",
-    "baseCost": 629,
-    "multiplier": 1.75,
+    "baseExergyCost": 629,
+    "exergyMultiplier": 1.75,
+    "baseStarfallCost": null,
+    "starfallMultiplier": null,
     "maxLevel": 10,
     "resource": "Exergy",
+    "costType": "exergy",
     "tiers": null,
     "items": [
       {
         "name": "Strength Armor Boost",
-        "costs": [629, 1101, 1927, 3372, 5901, 10327, 18072, 31626, 55346, 96800]
+        "exergyCosts": [629, 1101, 1927, 3372, 5901, 10327, 18072, 31626, 55346, 96800],
+        "starfallCosts": null
       },
       {
         "name": "Strength Weapon Boost",
-        "costs": [629, 1101, 1927, 3372, 5901, 10327, 18072, 31626, 55346, 96800]
+        "exergyCosts": [629, 1101, 1927, 3372, 5901, 10327, 18072, 31626, 55346, 96800],
+        "starfallCosts": null
       },
       {
         "name": "Agility Armor Boost",
-        "costs": [629, 1101, 1927, 3372, 5901, 10327, 18072, 31626, 55346, 96800]
+        "exergyCosts": [629, 1101, 1927, 3372, 5901, 10327, 18072, 31626, 55346, 96800],
+        "starfallCosts": null
       },
       {
         "name": "Agility Weapon Boost",
-        "costs": [629, 1101, 1927, 3372, 5901, 10327, 18072, 31626, 55346, 96800]
+        "exergyCosts": [629, 1101, 1927, 3372, 5901, 10327, 18072, 31626, 55346, 96800],
+        "starfallCosts": null
       },
       {
         "name": "Intelligence Armor Boost",
-        "costs": [629, 1101, 1927, 3372, 5901, 10327, 18072, 31626, 55346, 96800]
+        "exergyCosts": [629, 1101, 1927, 3372, 5901, 10327, 18072, 31626, 55346, 96800],
+        "starfallCosts": null
       },
       {
         "name": "Intelligence Weapon Boost",
-        "costs": [629, 1101, 1927, 3372, 5901, 10327, 18072, 31626, 55346, 96800]
+        "exergyCosts": [629, 1101, 1927, 3372, 5901, 10327, 18072, 31626, 55346, 96800],
+        "starfallCosts": null
       }
     ]
   }
