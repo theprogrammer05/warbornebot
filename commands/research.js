@@ -31,7 +31,9 @@ export default {
         { name: 'Driftmark Tiers', value: 'driftmark' },
         { name: 'Equipment Tiers', value: 'equip' },
         { name: 'Drifter Stats (Str/Agi/Int/Melee/Ranged)', value: 'drifter_stats' },
-        { name: 'Armor & Weapon Boosts', value: 'armor_weapon_boosts' }
+        { name: 'Armor & Weapon Boosts', value: 'armor_weapon_boosts' },
+        { name: 'Combat Stats (Crit/CC Res/DMG Res)', value: 'combat_stats' },
+        { name: 'Gathering Skills', value: 'gathering_skills' }
       ]
     }
   ],
@@ -156,8 +158,8 @@ export default {
 
       // Split into two tables for better readability
       const sampleItem = research.items[0];
-      const hasExergy = sampleItem.exergyCosts && sampleItem.exergyCosts.length > 0;
-      const hasStarfall = sampleItem.starfallCosts && sampleItem.starfallCosts.length > 0;
+      const hasExergy = sampleItem.exergyCosts !== null && sampleItem.exergyCosts && sampleItem.exergyCosts.length > 0;
+      const hasStarfall = sampleItem.starfallCosts !== null && sampleItem.starfallCosts && sampleItem.starfallCosts.length > 0;
       
       let cumulativeExergy = 0;
       let cumulativeStarfall = 0;
@@ -181,13 +183,15 @@ export default {
       // Starfall table
       if (hasStarfall) {
         let starfallTable = '```\n';
-        starfallTable += 'Lvl | Cost      | Total Cost\n';
-        starfallTable += '----|-----------|------------\n';
+        starfallTable += 'Lvl | Cost         | Total Cost\n';
+        starfallTable += '----|--------------|-------------\n';
         
         sampleItem.starfallCosts.forEach((cost, i) => {
-          cumulativeStarfall += cost;
+          if (cost !== null) cumulativeStarfall += cost;
           const lvl = (i + 1).toString().padStart(2);
-          starfallTable += ` ${lvl} | ${formatNumber(cost).padStart(9)} | ${formatNumber(cumulativeStarfall).padStart(10)}\n`;
+          const costStr = (cost !== null ? formatNumber(cost) : '?').padStart(12);
+          const totalStr = (cost !== null ? formatNumber(cumulativeStarfall) : '?').padStart(11);
+          starfallTable += ` ${lvl} | ${costStr} | ${totalStr}\n`;
         });
         
         starfallTable += '```';
@@ -200,6 +204,7 @@ export default {
       // Show summary
       const totalExergyToMax = hasExergy ? cumulativeExergy : null;
       const totalStarfallToMax = hasStarfall ? cumulativeStarfall : null;
+      const hasIncompleteData = hasStarfall && sampleItem.starfallCosts.some(c => c === null);
       
       let summaryText = '';
       if (totalExergyToMax !== null) {
@@ -208,8 +213,9 @@ export default {
       }
       if (totalStarfallToMax !== null) {
         if (summaryText) summaryText += '\n';
-        summaryText += `:moneybag: **One item:** ${formatNumber(totalStarfallToMax)} Starfall\n`;
-        summaryText += `:moneybag: **All ${research.items.length} items:** ${formatNumber(totalStarfallToMax * research.items.length)} Starfall`;
+        const suffix = hasIncompleteData ? ' (Partial - some levels unknown)' : '';
+        summaryText += `:moneybag: **One item:** ${formatNumber(totalStarfallToMax)} Starfall${suffix}\n`;
+        summaryText += `:moneybag: **All ${research.items.length} items:** ${formatNumber(totalStarfallToMax * research.items.length)} Starfall${suffix}`;
       }
       
       if (summaryText) {

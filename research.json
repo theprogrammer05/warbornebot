@@ -203,54 +203,54 @@
   },
   "drifter_stats": {
     "name": "Drifter Str/Agi/Int/Melee/Ranged",
-    "description": "Drifter stat upgrades with 1.45x multiplier progression",
+    "description": "Drifter stat upgrades with 1.45x Exergy and 2.0x Starfall multiplier progression",
     "note": "Costs are calculated with rounding; in-game values may vary slightly",
     "baseExergyCost": 309,
     "exergyMultiplier": 1.45,
-    "baseStarfallCost": null,
-    "starfallMultiplier": null,
+    "baseStarfallCost": 1095,
+    "starfallMultiplier": 2.0,
     "maxLevel": 10,
-    "resource": "Exergy",
+    "resource": "Exergy, Starfall",
     "costType": "exergy",
     "tiers": null,
     "items": [
       {
         "name": "Drifter Strength",
         "exergyCosts": [309, 448, 650, 942, 1366, 1981, 2872, 4164, 6038, 8755],
-        "starfallCosts": null
+        "starfallCosts": [1095, 2190, 4380, 8760, 17520, 35040, 70080, 140160, 280320, 560640]
       },
       {
         "name": "Drifter Agility",
         "exergyCosts": [309, 448, 650, 942, 1366, 1981, 2872, 4164, 6038, 8755],
-        "starfallCosts": null
+        "starfallCosts": [1095, 2190, 4380, 8760, 17520, 35040, 70080, 140160, 280320, 560640]
       },
       {
         "name": "Drifter Intelligence",
         "exergyCosts": [309, 448, 650, 942, 1366, 1981, 2872, 4164, 6038, 8755],
-        "starfallCosts": null
+        "starfallCosts": [1095, 2190, 4380, 8760, 17520, 35040, 70080, 140160, 280320, 560640]
       },
       {
         "name": "Drifter Melee",
         "exergyCosts": [309, 448, 650, 942, 1366, 1981, 2872, 4164, 6038, 8755],
-        "starfallCosts": null
+        "starfallCosts": [1095, 2190, 4380, 8760, 17520, 35040, 70080, 140160, 280320, 560640]
       },
       {
         "name": "Drifter Ranged",
         "exergyCosts": [309, 448, 650, 942, 1366, 1981, 2872, 4164, 6038, 8755],
-        "starfallCosts": null
+        "starfallCosts": [1095, 2190, 4380, 8760, 17520, 35040, 70080, 140160, 280320, 560640]
       }
     ]
   },
   "armor_weapon_boosts": {
     "name": "Str/Agi/Int Armor & Weapon Boosts",
-    "description": "Equipment stat boosts with 1.75x multiplier progression",
+    "description": "Equipment stat boosts with 1.75x Exergy multiplier progression",
     "note": "Costs are calculated with rounding; in-game values may vary slightly",
     "baseExergyCost": 629,
     "exergyMultiplier": 1.75,
     "baseStarfallCost": null,
     "starfallMultiplier": null,
     "maxLevel": 10,
-    "resource": "Exergy",
+    "resource": "Exergy, Starfall",
     "costType": "exergy",
     "tiers": null,
     "items": [
@@ -283,6 +283,61 @@
         "name": "Intelligence Weapon Boost",
         "exergyCosts": [629, 1101, 1927, 3372, 5901, 10327, 18072, 31626, 55346, 96800],
         "starfallCosts": null
+      }
+    ]
+  },
+  "combat_stats": {
+    "name": "Basic Atk Crit / Skill Crit / Crowd Control Res / Damage Res",
+    "description": "Combat stat upgrades with 1.65x Exergy and 2.0x Starfall multiplier progression",
+    "note": "Costs are calculated with rounding; in-game values may vary slightly",
+    "baseExergyCost": 438,
+    "exergyMultiplier": 1.65,
+    "baseStarfallCost": 4125,
+    "starfallMultiplier": 2.0,
+    "maxLevel": 10,
+    "resource": "Exergy, Starfall",
+    "costType": "exergy",
+    "tiers": null,
+    "items": [
+      {
+        "name": "Basic Attack Crit",
+        "exergyCosts": [438, 722, 1192, 1967, 3246, 5356, 8837, 14581, 24059, 39697],
+        "starfallCosts": [4125, 8250, 16500, 33000, 66000, 132000, 264000, 528000, 1056000, 2112000]
+      },
+      {
+        "name": "Skill Crit",
+        "exergyCosts": [438, 722, 1192, 1967, 3246, 5356, 8837, 14581, 24059, 39697],
+        "starfallCosts": [4125, 8250, 16500, 33000, 66000, 132000, 264000, 528000, 1056000, 2112000]
+      },
+      {
+        "name": "Crowd Control Resistance",
+        "exergyCosts": [438, 722, 1192, 1967, 3246, 5356, 8837, 14581, 24059, 39697],
+        "starfallCosts": [4125, 8250, 16500, 33000, 66000, 132000, 264000, 528000, 1056000, 2112000]
+      },
+      {
+        "name": "Damage Resistance",
+        "exergyCosts": [438, 722, 1192, 1967, 3246, 5356, 8837, 14581, 24059, 39697],
+        "starfallCosts": [4125, 8250, 16500, 33000, 66000, 132000, 264000, 528000, 1056000, 2112000]
+      }
+    ]
+  },
+  "gathering_skills": {
+    "name": "Gathering Skills",
+    "description": "Resource gathering upgrades with 1.5x Exergy and 2.0x Starfall multiplier progression",
+    "note": "Costs are calculated with rounding; in-game values may vary slightly",
+    "baseExergyCost": 3110,
+    "exergyMultiplier": 1.5,
+    "baseStarfallCost": 33125,
+    "starfallMultiplier": 2.0,
+    "maxLevel": 10,
+    "resource": "Exergy, Starfall",
+    "costType": "exergy",
+    "tiers": null,
+    "items": [
+      {
+        "name": "Gathering Skills",
+        "exergyCosts": [3110, 4665, 6998, 10497, 15746, 23619, 35429, 53144, 79716, 119574],
+        "starfallCosts": [33125, 66250, 132500, 265000, 530000, 1060000, 2120000, 4240000, 8480000, 16960000]
       }
     ]
   }
