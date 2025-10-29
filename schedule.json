@@ -1,7 +1,7 @@
 {
   "Everyday": [
     {
-      "name": "WAR TIME",
+      "name": "War Time!",
       "description": "Join your faction for coordinated PvP battles!",
       "times": [
         "6:00 PM",
@@ -12,7 +12,7 @@
   "Sunday": [
     {
       "name": "Double Scrap Post",
-      "description": "Double the scrap from all sources today!",
+      "description": "Loot bonus from scrap posts today!",
       "times": []
     }
   ],
@@ -26,7 +26,7 @@
   "Tuesday": [
     {
       "name": "Exergy Event",
-      "description": "Special energy-based event with exclusive rewards!",
+      "description": "This is your opportunity to catch up! With the right group, you should average 200-250k~ exergy per event time.",
       "times": [
         "10:30 AM",
         "3:30 PM",
@@ -37,7 +37,7 @@
   "Wednesday": [
     {
       "name": "50% Experience",
-      "description": "50% bonus experience on all activities. Don't forget to do your highest Trial first!",
+      "description": "50% bonus experience on from creatures.",
       "times": [
         "10:00 AM"
       ]
@@ -46,7 +46,7 @@
   "Thursday": [
     {
       "name": "Radiation Storm",
-      "description": "Special environmental hazard event with unique rewards!",
+      "description": "No fucking clue what this means.",
       "times": [
         "12:00 PM",
         "6:00 PM"
@@ -55,18 +55,15 @@
   ],
   "Friday": [
     {
-      "name": "Faction Contribution from PVP",
+      "name": "Faction Contribution from PVP (25%)",
       "description": "Increased faction points from PvP activities!",
-      "times": [
-        "5:00 PM",
-        "7:00 PM"
-      ]
+      "times": []
     }
   ],
   "Saturday": [
     {
       "name": "Protein Event",
-      "description": "Increased protein drops from all sources!",
+      "description": "Increased protein drops from all sources! Find the golden protein on the map!",
       "times": [
         "11:00 AM",
         "4:00 PM"

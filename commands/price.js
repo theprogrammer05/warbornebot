@@ -70,12 +70,12 @@ export default {
           `💎 **Solarbite Break-Even Calculator**\n` +
           `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
           `📊 **Input Values:**\n` +
-          `   • Equipment Cost: **${equipStarfallCost.toLocaleString()}** ⚪ Starfall\n` +
-          `   • Chest Size: **${starfallChestCost.toLocaleString()}** ⚪ Starfall\n` +
-          `   • Solarbite Cost: **${solarbiteStarfallChestCost}** 🔴 Solarbite\n\n` +
+          `   • Equipment Cost: **${equipStarfallCost.toLocaleString()}** :moneybag: Starfall\n` +
+          `   • Chest Size: **${starfallChestCost.toLocaleString()}** :moneybag: Starfall\n` +
+          `   • Solarbite Cost: **${solarbiteStarfallChestCost}** :diamonds: Solarbite\n\n` +
           `💰 **Break-Even Values:**\n` +
-          `   • **True Value:** ${formattedTrue} 🔴 Solarbite\n` +
-          `   • **Market Value:** ${formattedMarket} 🔴 Solarbite _(after 6% market cut)_\n\n` +
+          `   • **True Value:** ${formattedTrue} :diamonds: Solarbite\n` +
+          `   • **Market Value:** ${formattedMarket} :diamonds: Solarbite _(after 6% market cut)_\n\n` +
           `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
           `💡 *Sell above market value to profit!*`,
         flags: MessageFlags.Ephemeral

@@ -1,8 +1,41 @@
 {
   "drifter": {
     "name": "Drifter",
-    "description": "Drifter tier values in Exergy",
+    "description": "Drifter tier values in Exergy (Note: Cost is same as Equipment research)",
+    "baseCost": null,
+    "multiplier": 1.30,
+    "maxLevel": null,
+    "resource": "Exergy",
+    "items": null,
     "tiers": [
+      {
+        "tier": "I",
+        "exergy": 5800
+      },
+      {
+        "tier": "II",
+        "exergy": 7500
+      },
+      {
+        "tier": "III",
+        "exergy": 9800
+      },
+      {
+        "tier": "IV",
+        "exergy": 12700
+      },
+      {
+        "tier": "V",
+        "exergy": 16500
+      },
+      {
+        "tier": "VI",
+        "exergy": 21500
+      },
+      {
+        "tier": "VII",
+        "exergy": 28000
+      },
       {
         "tier": "VIII",
         "exergy": 36400
@@ -24,6 +57,11 @@
   "driftmark": {
     "name": "Driftmark",
     "description": "Driftmark tiers with Exergy, Starfall values, and duration",
+    "baseCost": null,
+    "multiplier": null,
+    "maxLevel": null,
+    "resource": "Exergy, Starfall",
+    "items": null,
     "tiers": [
       {
         "tier": "V",
@@ -64,9 +102,42 @@
     ]
   },
   "equip": {
-    "name": "Equipment",
-    "description": "Equipment tier values in Exergy",
+    "name": "Trade - Advanced Equipment",
+    "description": "Equipment tier values in Exergy (Note: Cost is same as Drifter research)",
+    "baseCost": null,
+    "multiplier": 1.30,
+    "maxLevel": null,
+    "resource": "Exergy",
+    "items": null,
     "tiers": [
+      {
+        "tier": "I",
+        "exergy": 5800
+      },
+      {
+        "tier": "II",
+        "exergy": 7500
+      },
+      {
+        "tier": "III",
+        "exergy": 9800
+      },
+      {
+        "tier": "IV",
+        "exergy": 12700
+      },
+      {
+        "tier": "V",
+        "exergy": 16500
+      },
+      {
+        "tier": "VI",
+        "exergy": 21500
+      },
+      {
+        "tier": "VII",
+        "exergy": 28000
+      },
       {
         "tier": "VIII",
         "exergy": 36400
@@ -82,6 +153,74 @@
       {
         "tier": "XI",
         "exergy": 79900
+      }
+    ]
+  },
+  "drifter_stats": {
+    "name": "Drifter Str/Agi/Int/Melee/Ranged",
+    "description": "Drifter stat upgrades with 1.45x multiplier progression",
+    "note": "Costs are calculated with rounding; in-game values may vary slightly",
+    "baseCost": 309,
+    "multiplier": 1.45,
+    "maxLevel": 10,
+    "resource": "Exergy",
+    "tiers": null,
+    "items": [
+      {
+        "name": "Drifter Strength",
+        "costs": [309, 448, 650, 942, 1366, 1981, 2872, 4164, 6038, 8755]
+      },
+      {
+        "name": "Drifter Agility",
+        "costs": [309, 448, 650, 942, 1366, 1981, 2872, 4164, 6038, 8755]
+      },
+      {
+        "name": "Drifter Intelligence",
+        "costs": [309, 448, 650, 942, 1366, 1981, 2872, 4164, 6038, 8755]
+      },
+      {
+        "name": "Drifter Melee",
+        "costs": [309, 448, 650, 942, 1366, 1981, 2872, 4164, 6038, 8755]
+      },
+      {
+        "name": "Drifter Ranged",
+        "costs": [309, 448, 650, 942, 1366, 1981, 2872, 4164, 6038, 8755]
+      }
+    ]
+  },
+  "armor_weapon_boosts": {
+    "name": "Str/Agi/Int Armor & Weapon Boosts",
+    "description": "Equipment stat boosts with 1.75x multiplier progression",
+    "note": "Costs are calculated with rounding; in-game values may vary slightly",
+    "baseCost": 629,
+    "multiplier": 1.75,
+    "maxLevel": 10,
+    "resource": "Exergy",
+    "tiers": null,
+    "items": [
+      {
+        "name": "Strength Armor Boost",
+        "costs": [629, 1101, 1927, 3372, 5901, 10327, 18072, 31626, 55346, 96800]
+      },
+      {
+        "name": "Strength Weapon Boost",
+        "costs": [629, 1101, 1927, 3372, 5901, 10327, 18072, 31626, 55346, 96800]
+      },
+      {
+        "name": "Agility Armor Boost",
+        "costs": [629, 1101, 1927, 3372, 5901, 10327, 18072, 31626, 55346, 96800]
+      },
+      {
+        "name": "Agility Weapon Boost",
+        "costs": [629, 1101, 1927, 3372, 5901, 10327, 18072, 31626, 55346, 96800]
+      },
+      {
+        "name": "Intelligence Armor Boost",
+        "costs": [629, 1101, 1927, 3372, 5901, 10327, 18072, 31626, 55346, 96800]
+      },
+      {
+        "name": "Intelligence Weapon Boost",
+        "costs": [629, 1101, 1927, 3372, 5901, 10327, 18072, 31626, 55346, 96800]
       }
     ]
   }
