@@ -1,68 +1,104 @@
 {
   "drifter": {
     "name": "Drifter",
-    "description": "Drifter tier values in Exergy (Note: Cost is same as Equipment research)",
-    "baseCost": null,
-    "multiplier": 1.30,
-    "maxLevel": null,
-    "resource": "Exergy",
+    "description": "Drifter tier values (Note: Cost is same as Equipment research)",
+    "baseExergyCost": null,
+    "exergyMultiplier": 1.30,
+    "baseStarfallCost": null,
+    "starfallMultiplier": null,
+    "maxLevel": 10,
+    "resource": "Exergy, Starfall",
+    "costType": "exergy",
     "items": null,
     "tiers": [
       {
         "tier": "I",
-        "exergy": 5800
+        "exergy": 5800,
+        "starfall": null
       },
       {
         "tier": "II",
-        "exergy": 7500
+        "exergy": 7500,
+        "starfall": null
       },
       {
         "tier": "III",
-        "exergy": 9800
+        "exergy": 9800,
+        "starfall": null
       },
       {
         "tier": "IV",
-        "exergy": 12700
+        "exergy": 12700,
+        "starfall": null
       },
       {
         "tier": "V",
-        "exergy": 16500
+        "exergy": 16500,
+        "starfall": null
       },
       {
         "tier": "VI",
-        "exergy": 21500
+        "exergy": 21500,
+        "starfall": null
       },
       {
         "tier": "VII",
-        "exergy": 28000
+        "exergy": 28000,
+        "starfall": null
       },
       {
         "tier": "VIII",
-        "exergy": 36400
+        "exergy": 36400,
+        "starfall": null
       },
       {
         "tier": "IX",
-        "exergy": 47300
+        "exergy": 47300,
+        "starfall": null
       },
       {
         "tier": "X",
-        "exergy": 61500
-      },
-      {
-        "tier": "XI",
-        "exergy": 79900
+        "exergy": 61500,
+        "starfall": null
       }
     ]
   },
   "driftmark": {
     "name": "Driftmark",
     "description": "Driftmark tiers with Exergy, Starfall values, and duration",
-    "baseCost": null,
-    "multiplier": null,
-    "maxLevel": null,
+    "baseExergyCost": null,
+    "exergyMultiplier": null,
+    "baseStarfallCost": null,
+    "starfallMultiplier": null,
+    "maxLevel": 10,
     "resource": "Exergy, Starfall",
+    "costType": "exergy",
     "items": null,
     "tiers": [
+      {
+        "tier": "I",
+        "exergy": null,
+        "starfall": null,
+        "duration": null
+      },
+      {
+        "tier": "II",
+        "exergy": null,
+        "starfall": null,
+        "duration": null
+      },
+      {
+        "tier": "III",
+        "exergy": null,
+        "starfall": null,
+        "duration": null
+      },
+      {
+        "tier": "IV",
+        "exergy": null,
+        "starfall": null,
+        "duration": null
+      },
       {
         "tier": "V",
         "exergy": 1400,
@@ -103,56 +139,65 @@
   },
   "equip": {
     "name": "Trade - Advanced Equipment",
-    "description": "Equipment tier values in Exergy (Note: Cost is same as Drifter research)",
-    "baseCost": null,
-    "multiplier": 1.30,
-    "maxLevel": null,
-    "resource": "Exergy",
+    "description": "Equipment tier values (Note: Cost is same as Drifter research)",
+    "baseExergyCost": null,
+    "exergyMultiplier": 1.30,
+    "baseStarfallCost": null,
+    "starfallMultiplier": null,
+    "maxLevel": 10,
+    "resource": "Exergy, Starfall",
+    "costType": "exergy",
     "items": null,
     "tiers": [
       {
         "tier": "I",
-        "exergy": 5800
+        "exergy": 5800,
+        "starfall": null
       },
       {
         "tier": "II",
-        "exergy": 7500
+        "exergy": 7500,
+        "starfall": null
       },
       {
         "tier": "III",
-        "exergy": 9800
+        "exergy": 9800,
+        "starfall": null
       },
       {
         "tier": "IV",
-        "exergy": 12700
+        "exergy": 12700,
+        "starfall": null
       },
       {
         "tier": "V",
-        "exergy": 16500
+        "exergy": 16500,
+        "starfall": null
       },
       {
         "tier": "VI",
-        "exergy": 21500
+        "exergy": 21500,
+        "starfall": null
       },
       {
         "tier": "VII",
-        "exergy": 28000
+        "exergy": 28000,
+        "starfall": null
       },
       {
         "tier": "VIII",
-        "exergy": 36400
+        "exergy": 36400,
+        "starfall": null
       },
       {
         "tier": "IX",
-        "exergy": 47300
+        "exergy": 47300,
+        "starfall": null
       },
       {
         "tier": "X",
-        "exergy": 61500
-      },
-      {
-        "tier": "XI",
-        "exergy": 79900
+        "exergy": 61500,
+        "starfall": null
       }
     ]
   },
