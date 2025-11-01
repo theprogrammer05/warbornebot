@@ -47,10 +47,7 @@
     {
       "name": "Radiation Storm",
       "description": "No fucking clue what this means.",
-      "times": [
-        "12:00 PM",
-        "6:00 PM"
-      ]
+      "times": []
     }
   ],
   "Friday": [
@@ -64,10 +61,7 @@
     {
       "name": "Protein Event",
       "description": "Increased protein drops from all sources! Find the golden protein on the map!",
-      "times": [
-        "11:00 AM",
-        "4:00 PM"
-      ]
+      "times": []
     }
   ]
 }
