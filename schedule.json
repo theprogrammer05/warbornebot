@@ -28,7 +28,7 @@
       "name": "Exergy Event",
       "description": "This is your opportunity to catch up! With the right group, you should average 200-250k~ exergy per event time.",
       "times": [
-        "09:30 AM",
+        "9:30 AM",
         "2:30 PM",
         "8:30 PM"
       ]
@@ -39,7 +39,7 @@
       "name": "50% Experience",
       "description": "50% bonus experience on from creatures.",
       "times": [
-        "09:00 AM"
+        "9:00 AM"
       ]
     }
   ],
