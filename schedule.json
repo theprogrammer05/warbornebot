@@ -4,8 +4,8 @@
       "name": "War Time!",
       "description": "Join your faction for coordinated PvP battles!",
       "times": [
-        "6:00 PM",
-        "8:00 PM"
+        "5:00 PM",
+        "7:00 PM"
       ]
     }
   ],
@@ -28,9 +28,9 @@
       "name": "Exergy Event",
       "description": "This is your opportunity to catch up! With the right group, you should average 200-250k~ exergy per event time.",
       "times": [
-        "10:30 AM",
-        "3:30 PM",
-        "9:30 PM"
+        "09:30 AM",
+        "2:30 PM",
+        "8:30 PM"
       ]
     }
   ],
@@ -39,7 +39,7 @@
       "name": "50% Experience",
       "description": "50% bonus experience on from creatures.",
       "times": [
-        "10:00 AM"
+        "09:00 AM"
       ]
     }
   ],
