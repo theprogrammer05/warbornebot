@@ -1,6 +1,6 @@
 /**
  * Daily Schedule Poster
- * Handles automatic daily schedule posts at midnight CST. Posts today's and
+ * Handles automatic daily schedule posts at 11:00 PM CST. Posts today's and
  * tomorrow's events to the announcement channel.
  */
 
@@ -69,14 +69,22 @@ export async function postDailySchedule(client, channelId) {
 
 export function scheduleDailyPost(client, channelId) {
   const now = getCentralTime();
-  const nextMidnight = new Date(now);
-  nextMidnight.setHours(24, 0, 5, 0);
-  const millisUntilMidnight = nextMidnight - now;
+  const nextPost = new Date(now);
+  
+  // Set to 11:00 PM today
+  nextPost.setHours(23, 0, 5, 0);
+  
+  // If 11:00 PM has already passed today, schedule for tomorrow
+  if (nextPost <= now) {
+    nextPost.setDate(nextPost.getDate() + 1);
+  }
+  
+  const millisUntilPost = nextPost - now;
 
-  console.log(`🕒 Next schedule post in ${Math.round(millisUntilMidnight / 1000 / 60)} minutes (Central Time)`);
+  console.log(`🕒 Next schedule post in ${Math.round(millisUntilPost / 1000 / 60)} minutes at 11:00 PM (Central Time)`);
 
   setTimeout(() => {
     postDailySchedule(client, channelId);
     setInterval(() => postDailySchedule(client, channelId), 24 * 60 * 60 * 1000);
-  }, millisUntilMidnight);
+  }, millisUntilPost);
 }
